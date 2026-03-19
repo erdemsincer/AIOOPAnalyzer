@@ -1,0 +1,125 @@
+name: AI OOP Analyzer - PR Kontrol
+
+on:
+  pull_request:
+    branches: [ main, master, develop ]
+    paths:
+      - '**/*.cs'
+
+jobs:
+  oop-analiz:
+    name: OOP Kalite Analizi
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      # 1) Repo'yu checkout et
+      - name: Repo'yu indir
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Tum gecmis (diff icin gerekli)
+
+      # 2) .NET 8 kur
+      - name: .NET 8 kur
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # 3) Analyzer'i derle
+      - name: Analyzer'i derle
+        run: dotnet build --configuration Release
+
+      # 4) Modeli egit (dataset'ten)
+      - name: Modeli egit
+        run: dotnet run --configuration Release -- train
+
+      # 5) PR'daki degisen .cs dosyalarini bul
+      - name: Degisen dosyalari bul
+        id: changed
+        run: |
+          # PR'in base branch'ine gore degisen .cs dosyalarini bul
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- '*.cs' | grep -v 'obj/' | grep -v 'bin/' | grep -v 'test-' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "Analiz edilecek .cs dosyasi bulunamadi."
+            echo "has_files=false" >> $GITHUB_OUTPUT
+          else
+            echo "Degisen dosyalar:"
+            echo "$CHANGED_FILES"
+            # Dosya listesini boslukla ayir (tek satir)
+            FILES_LINE=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+            echo "files=$FILES_LINE" >> $GITHUB_OUTPUT
+            echo "has_files=true" >> $GITHUB_OUTPUT
+            echo "file_count=$(echo "$CHANGED_FILES" | wc -l | tr -d ' ')" >> $GITHUB_OUTPUT
+          fi
+
+      # 6) Analyzer'i calistir (degisen dosyalar uzerinde)
+      - name: OOP Analizi yap
+        id: analyze
+        if: steps.changed.outputs.has_files == 'true'
+        run: |
+          dotnet run --configuration Release -- pr-check ${{ steps.changed.outputs.files }} --min-score=65 --report=pr-report.md
+          echo "exit_code=$?" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      # 7) PR'a yorum olarak rapor ekle
+      - name: PR'a rapor ekle
+        if: steps.changed.outputs.has_files == 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'pr-report.md';
+
+            let body = '';
+            if (fs.existsSync(reportPath)) {
+              body = fs.readFileSync(reportPath, 'utf8');
+            } else {
+              body = '## AI OOP Analyzer\n\nRapor olusturulamadi. Loglari kontrol edin.';
+            }
+
+            // Onceki analyzer yorumlarini sil (guncelleme icin)
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComments = comments.filter(c =>
+              c.body.includes('AI OOP Analyzer') && c.user.type === 'Bot'
+            );
+
+            for (const comment of botComments) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: comment.id,
+              });
+            }
+
+            // Yeni yorum ekle
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+
+      # 8) Dosya yoksa bilgi ver
+      - name: Degisen CS dosyasi yok
+        if: steps.changed.outputs.has_files == 'false'
+        run: echo "PR'da degisen .cs dosyasi bulunamadi. Analiz atlanacak."
+
+      # 9) Sonucu kontrol et (merge'u blokla veya gec)
+      - name: Sonucu degerlendir
+        if: steps.changed.outputs.has_files == 'true'
+        run: |
+          if [ "${{ steps.analyze.outcome }}" == "failure" ]; then
+            echo "::error::OOP Analizi basarisiz! Kod kalite esiginin altinda. PR'daki sorunlari duzeltip tekrar gonderin."
+            exit 1
+          else
+            echo "OOP Analizi basarili! Kod kalite esigini gecti."
+          fi

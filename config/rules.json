@@ -1,0 +1,42 @@
+{
+  "PassThreshold": 0.7,
+  "Rules": [
+    {
+      "RuleName": "Encapsulation",
+      "MaxScore": 15,
+      "PenaltyPerViolation": 5,
+      "Description": "Public alanlar property veya private olmalı"
+    },
+    {
+      "RuleName": "SRP",
+      "MaxScore": 15,
+      "PenaltyPerViolation": 5,
+      "Description": "Bir sınıf çok fazla metod içermemeli (tek sorumluluk)",
+      "Threshold": 2
+    },
+    {
+      "RuleName": "Dependency Injection",
+      "MaxScore": 20,
+      "PenaltyPerViolation": 10,
+      "Description": "Sınıf içinde new ile doğrudan nesne oluşturmak yerine DI kullanılmalı"
+    },
+    {
+      "RuleName": "Interfaces",
+      "MaxScore": 15,
+      "PenaltyPerViolation": 5,
+      "Description": "Sınıflar interface implement etmeli"
+    },
+    {
+      "RuleName": "Inheritance",
+      "MaxScore": 15,
+      "PenaltyPerViolation": 5,
+      "Description": "Uygun yerlerde kalıtım kullanılmalı"
+    },
+    {
+      "RuleName": "Polymorphism",
+      "MaxScore": 20,
+      "PenaltyPerViolation": 10,
+      "Description": "Override ve virtual mekanizmaları doğru kullanılmalı"
+    }
+  ]
+}
