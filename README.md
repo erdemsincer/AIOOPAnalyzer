@@ -25,7 +25,7 @@ PR acildiginda otomatik calisir, kod kalitesini olcer ve sonucu PR yorumu olarak
      +------------------------+
      |
      v
-  Hibrit Skor = Kural %60 + ML %40
+  Hibrit Skor Q = w_k * K + w_m * M  (agirliklar: config/hybrid.json)
      |
      v
   Final Karar: Good / Bad
@@ -56,7 +56,7 @@ dotnet run analyze dosya.cs
 # Interaktif mod (kod yapistir)
 dotnet run analyze
 
-# Tum veri setini test et
+# Tum veri setini test et (k-NN / yalniz kural / hibrit karsilastirmasi, karisiklik matrisi)
 dotnet run batch
 ```
 
@@ -69,7 +69,7 @@ dotnet run pr-check Services/OrderService.cs Models/Order.cs
 # Markdown rapor olustur
 dotnet run pr-check dosya.cs --report=rapor.md
 
-# Ozel esik degeri
+# Ozel esik degeri (varsayilan: config/hybrid.json -> qualityThreshold)
 dotnet run pr-check dosya.cs --min-score=80
 
 # Tek dosya pipeline
@@ -142,6 +142,33 @@ Boylece kalitesiz kod merge edilemez.
 | Polymorphism | 20 | -10 | virtual/override dogru kullanim |
 
 Kurallar `config/rules.json` dosyasindan ayarlanabilir.
+
+## Hibrit kalite tanimi (`config/hybrid.json`)
+
+Tek bir yerde tanimlanir: birlesik skor **Q**, agirliklar ve Good/Bad kararinda kullanilan esikler.
+
+| Alan | Aciklama |
+|------|----------|
+| `ruleWeight`, `mlWeight` | Q = w_k * K + w_m * M (K: kural yuzdesi 0-100, M: k-NN skoru 0-100). Toplam 1 degilse agirliklar otomatik normalize edilir. |
+| `qualityThreshold` | Guclu uyum dallarindan sonra hala kararsiz kalinirsa: Q >= esik ise Good. `pr-check` ve `pipeline` icin `--min-score` verilmezse bu deger kullanilir. |
+| `strongAgreementHighRulePercent` | K bu degerin uzerinde ve ML Good ise -> Good. |
+| `strongAgreementLowRulePercent` | K bu degerin altinda ve ML Bad ise -> Bad. |
+
+**Yalniz kural (ablation):** Good <=> K >= `qualityThreshold` (batch istatistiklerinde kullanilir).
+
+### Batch ciktisi
+
+`dotnet run batch` calistirildiginda veri setindeki gercek etiketlere gore:
+
+- **Yalniz k-NN (ML):** Tahmin = k-NN etiketi
+- **Yalniz kural:** Tahmin = K >= `qualityThreshold` ise Good
+- **Hibrit:** Tahmin = `FinalVerdict` (yukaridaki kurallar + Q)
+
+Her biri icin dogruluk, 2x2 karisiklik matrisi, sinif bazinda recall/precision ozetlenir; ayrica kalite tanimi metin olarak yazdirilir.
+
+### Pipeline JSON
+
+`dotnet run pipeline dosya.cs --json` ciktisinda `kalite_tanimi` nesnesi (agirliklar ve esikler) tekrarlanabilirlik icin yer alir.
 
 ## Veri Seti
 
