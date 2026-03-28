@@ -1,0 +1,7 @@
+{
+  "ruleWeight": 0.6,
+  "mlWeight": 0.4,
+  "qualityThreshold": 65,
+  "strongAgreementHighRulePercent": 70,
+  "strongAgreementLowRulePercent": 50
+}

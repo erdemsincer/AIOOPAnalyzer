@@ -29,21 +29,31 @@ namespace AIOOPAnalyzer.Services
         private readonly FeatureExtractor _featureExtractor;
         private readonly double _ruleWeight;
         private readonly double _mlWeight;
+        private readonly HybridConfig _hybrid;
 
-        /// <param name="ruleWeight">Kural bazlı skorun ağırlığı (varsayılan: 0.6)</param>
-        /// <param name="mlWeight">ML tahmininin ağırlığı (varsayılan: 0.4)</param>
         public HybridAnalyzer(
-            RulesConfig config,
-            string modelPath = "models/model.json",
-            double ruleWeight = 0.6,
-            double mlWeight = 0.4)
+            RulesConfig rulesConfig,
+            HybridConfig hybridConfig,
+            string modelPath = "models/model.json")
         {
             _parser = new CodeParserService();
-            _ruleAnalyzer = new AnalyzerService(config);
+            _ruleAnalyzer = new AnalyzerService(rulesConfig);
             _mlPredictor = new ModelPredictor(modelPath);
             _featureExtractor = new FeatureExtractor();
-            _ruleWeight = ruleWeight;
-            _mlWeight = mlWeight;
+            _hybrid = hybridConfig ?? new HybridConfig();
+            double rw = _hybrid.RuleWeight;
+            double mw = _hybrid.MLWeight;
+            double sum = rw + mw;
+            if (sum > 0)
+            {
+                _ruleWeight = rw / sum;
+                _mlWeight = mw / sum;
+            }
+            else
+            {
+                _ruleWeight = 0.6;
+                _mlWeight = 0.4;
+            }
         }
 
         /// <summary>
@@ -67,18 +77,9 @@ namespace AIOOPAnalyzer.Services
                 ? (double)ruleResult.TotalScore / ruleResult.MaxScore * 100
                 : 0;
 
-            double combinedScore = (_ruleWeight * rulePercent) + (_mlWeight * mlResult.PredictedScore);
+            double combinedScore = ComputeCombinedScore(rulePercent, mlResult, _hybrid);
 
-            // 5) Final karar
-            string verdict;
-            if (rulePercent >= 70 && mlResult.PredictedLabel == "Good")
-                verdict = "Good";
-            else if (rulePercent < 50 && mlResult.PredictedLabel == "Bad")
-                verdict = "Bad";
-            else if (combinedScore >= 65)
-                verdict = "Good";
-            else
-                verdict = "Bad";
+            string verdict = ComputeFinalVerdict(rulePercent, mlResult, _hybrid);
 
             return new HybridResult
             {
@@ -88,6 +89,30 @@ namespace AIOOPAnalyzer.Services
                 CombinedScore = Math.Round(combinedScore, 1),
                 FinalVerdict = verdict
             };
+        }
+
+        /// <summary>
+        /// K (0-100), ML tahmini ve config ile nihai Good/Bad karari.
+        /// </summary>
+        public static string ComputeFinalVerdict(double rulePercent100, PredictionResult ml, HybridConfig h)
+        {
+            if (rulePercent100 >= h.StrongAgreementHighRulePercent && ml.PredictedLabel == "Good")
+                return "Good";
+            if (rulePercent100 < h.StrongAgreementLowRulePercent && ml.PredictedLabel == "Bad")
+                return "Bad";
+            double q = ComputeCombinedScore(rulePercent100, ml, h);
+            return q >= h.QualityThreshold ? "Good" : "Bad";
+        }
+
+        /// <summary>
+        /// <see cref="Analyze"/> ile ayni birlesik Q degerini hesaplar (agirliklar normalize).
+        /// </summary>
+        public static double ComputeCombinedScore(double rulePercent100, PredictionResult ml, HybridConfig h)
+        {
+            double sum = h.RuleWeight + h.MLWeight;
+            if (sum <= 0)
+                return 0.6 * rulePercent100 + 0.4 * ml.PredictedScore;
+            return (h.RuleWeight / sum * rulePercent100) + (h.MLWeight / sum * ml.PredictedScore);
         }
 
         /// <summary>
@@ -137,7 +162,8 @@ namespace AIOOPAnalyzer.Services
             // -- BIRLESIK SONUC --
             Console.WriteLine("\n+------------------------------------------+");
             Console.WriteLine($"  BIRLESIK SKOR: {result.CombinedScore}/100");
-            Console.WriteLine($"  Hesaplama: Kural {rulePercent:P0} (x{_ruleWeight}) + ML {result.MLResult.PredictedScore:F0} (x{_mlWeight})");
+            Console.WriteLine($"  Hesaplama: Kural {rulePercent:P0} (x{_ruleWeight:F2}) + ML {result.MLResult.PredictedScore:F0} (x{_mlWeight:F2})");
+            Console.WriteLine($"  Esik (qualityThreshold): {_hybrid.QualityThreshold}");
             string finalDurum = result.FinalVerdict == "Good" ? "BASARILI" : "BASARISIZ";
             Console.WriteLine($"  FINAL KARAR: {result.FinalVerdict} ({finalDurum})");
             Console.WriteLine("+------------------------------------------+");

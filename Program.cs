@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,7 +13,8 @@ class Program
         // Pipeline modunda banner basma
         bool isPipeline = args.Any(a => a == "--pipeline" || a == "--json" || a == "--ci");
         bool jsonOutput = args.Any(a => a == "--json");
-        int minScore = 65; // varsayilan esik
+        var hybridDefaults = ConfigLoader.LoadHybrid("config/hybrid.json");
+        int minScore = hybridDefaults.QualityThreshold;
 
         // --min-score=75 gibi parametre destegi
         var minScoreArg = args.FirstOrDefault(a => a.StartsWith("--min-score="));
@@ -121,7 +122,8 @@ class Program
 
         // Hibrit analiz
         var config = ConfigLoader.LoadRules("config/rules.json");
-        var hybrid = new HybridAnalyzer(config, "models/model.json");
+        var hybridCfg = ConfigLoader.LoadHybrid("config/hybrid.json");
+        var hybrid = new HybridAnalyzer(config, hybridCfg, "models/model.json");
         var result = hybrid.Analyze(sourceCode);
         hybrid.PrintReport(result);
     }
@@ -142,14 +144,13 @@ class Program
         }
 
         var config = ConfigLoader.LoadRules("config/rules.json");
+        var hybridCfg = ConfigLoader.LoadHybrid("config/hybrid.json");
         var dataset = DatasetLoader.Load("data/dataset.json");
-        var hybrid = new HybridAnalyzer(config, "models/model.json");
-        var parser = new CodeParserService();
-        var analyzer = new AnalyzerService(config);
+        var hybrid = new HybridAnalyzer(config, hybridCfg, "models/model.json");
 
         int totalCorrect = 0;
         int totalWrong = 0;
-        var results = new List<(DatasetItem Item, HybridResult Result, bool Correct)>();
+        var results = new List<(DatasetItem Item, HybridResult Result, bool MlMatchesLabel)>();
 
         foreach (var item in dataset)
         {
@@ -159,21 +160,21 @@ class Program
 
             var hybridResult = hybrid.Analyze(item.Code);
 
-            // Kural bazli skor
-            double rulePercent = hybridResult.RuleBasedResult.MaxScore > 0
+            double rulePercentFrac = hybridResult.RuleBasedResult.MaxScore > 0
                 ? (double)hybridResult.RuleBasedResult.TotalScore / hybridResult.RuleBasedResult.MaxScore
                 : 0;
+            double rulePercent100 = rulePercentFrac * 100;
 
-            // ML tahmini gercek label ile eslesiyor mu?
-            bool correct = hybridResult.MLResult.PredictedLabel == item.Label;
-            if (correct) totalCorrect++; else totalWrong++;
-            results.Add((item, hybridResult, correct));
+            bool mlOk = hybridResult.MLResult.PredictedLabel == item.Label;
+            if (mlOk) totalCorrect++; else totalWrong++;
+            results.Add((item, hybridResult, mlOk));
 
-            string matchDurum = correct ? "DOGRU" : "YANLIS";
-            Console.WriteLine($"  Kural Skoru: {hybridResult.RuleBasedResult.TotalScore}/{hybridResult.RuleBasedResult.MaxScore} ({rulePercent:P0})");
+            string ruleOnly = BatchEvaluationMetrics.PredictRuleOnly(rulePercent100, hybridCfg);
+            string matchDurum = mlOk ? "DOGRU" : "YANLIS";
+            Console.WriteLine($"  Kural Skoru: {hybridResult.RuleBasedResult.TotalScore}/{hybridResult.RuleBasedResult.MaxScore} ({rulePercentFrac:P0})");
             Console.WriteLine($"  ML Tahmin: {hybridResult.MLResult.PredictedLabel} (guven: {hybridResult.MLResult.Confidence:P0}, skor: {hybridResult.MLResult.PredictedScore:F0})");
-            Console.WriteLine($"  [{matchDurum}] Tahmin={hybridResult.MLResult.PredictedLabel}, Gercek={item.Label}");
-            Console.WriteLine($"  Birlesik Skor: {hybridResult.CombinedScore:F0}/100 -> {hybridResult.FinalVerdict}");
+            Console.WriteLine($"  [{matchDurum}] ML Tahmin={hybridResult.MLResult.PredictedLabel}, Gercek={item.Label}");
+            Console.WriteLine($"  Birlesik Skor: {hybridResult.CombinedScore:F1}/100 -> Hibrit: {hybridResult.FinalVerdict} | Yalniz kural: {ruleOnly}");
 
             if (hybridResult.RuleBasedResult.Issues.Count > 0)
             {
@@ -186,36 +187,59 @@ class Program
             Console.WriteLine();
         }
 
+        int n = dataset.Count;
+        var mlRows = results.Select(r => (r.Item.Label, r.Result.MLResult.PredictedLabel)).ToList();
+        var ruleRows = results.Select(r =>
+        {
+            double k = r.Result.RuleBasedResult.MaxScore > 0
+                ? (double)r.Result.RuleBasedResult.TotalScore / r.Result.RuleBasedResult.MaxScore * 100
+                : 0;
+            return (Actual: r.Item.Label, Predicted: BatchEvaluationMetrics.PredictRuleOnly(k, hybridCfg));
+        }).ToList();
+        var hybridRows = results.Select(r => (r.Item.Label, r.Result.FinalVerdict)).ToList();
+        int ruleCorrect = ruleRows.Count(r => r.Actual == r.Predicted);
+
+        var mlM = BatchEvaluationMetrics.ConfusionMatrix(mlRows);
+        var ruleM = BatchEvaluationMetrics.ConfusionMatrix(ruleRows.Select(r => (r.Actual, r.Predicted)));
+        var hybM = BatchEvaluationMetrics.ConfusionMatrix(hybridRows);
+
         // -- GENEL OZET --
         Console.WriteLine("------------------------------------------");
         Console.WriteLine("[TOPLU TEST OZETI]\n");
 
-        Console.WriteLine($"  Toplam test      : {dataset.Count}");
-        Console.WriteLine($"  ML Dogruluk      : {totalCorrect}/{dataset.Count} ({(double)totalCorrect / dataset.Count:P0})");
-        Console.WriteLine($"  ML Hata          : {totalWrong}/{dataset.Count}");
+        BatchEvaluationMetrics.PrintHybridFormulaNote(hybridCfg);
 
-        // Label bazli dogruluk
+        Console.WriteLine("  [ISTATISTIKSEL DEGERLENDIRME — Gercek etikete gore]\n");
+        BatchEvaluationMetrics.PrintBlock("Yalniz k-NN (ML)", mlM, n);
+        BatchEvaluationMetrics.PrintBlock($"Yalniz kural (K >= {hybridCfg.QualityThreshold})", ruleM, n);
+        BatchEvaluationMetrics.PrintBlock("Hibrit (FinalVerdict)", hybM, n);
+
+        Console.WriteLine($"  Toplam ornek     : {n}");
+        Console.WriteLine($"  ML dogruluk      : {totalCorrect}/{n} ({(double)totalCorrect / n:P0})");
+        Console.WriteLine($"  Hibrit dogruluk  : {results.Count(r => r.Result.FinalVerdict == r.Item.Label)}/{n} ({(double)results.Count(r => r.Result.FinalVerdict == r.Item.Label) / n:P0})");
+        Console.WriteLine($"  Yalniz kural dogr.: {ruleCorrect}/{n}");
+
         var goodItems = results.Where(r => r.Item.Label == "Good").ToList();
         var badItems = results.Where(r => r.Item.Label == "Bad").ToList();
-        Console.WriteLine($"\n  Good orneklerde dogruluk : {goodItems.Count(r => r.Correct)}/{goodItems.Count}");
-        Console.WriteLine($"  Bad orneklerde dogruluk  : {badItems.Count(r => r.Correct)}/{badItems.Count}");
+        Console.WriteLine($"\n  Good orneklerde ML dogruluk : {goodItems.Count(r => r.MlMatchesLabel)}/{goodItems.Count}");
+        Console.WriteLine($"  Bad orneklerde ML dogruluk  : {badItems.Count(r => r.MlMatchesLabel)}/{badItems.Count}");
 
-        // Skor karsilastirmasi
         Console.WriteLine($"\n  [SKOR KARSILASTIRMASI]");
-        Console.WriteLine($"      Good ort. tahmini skor : {goodItems.Average(r => r.Result.MLResult.PredictedScore):F0}");
-        Console.WriteLine($"      Bad ort. tahmini skor  : {badItems.Average(r => r.Result.MLResult.PredictedScore):F0}");
-        Console.WriteLine($"      Good ort. kural skoru  : {goodItems.Average(r => (double)r.Result.RuleBasedResult.TotalScore / r.Result.RuleBasedResult.MaxScore):P0}");
-        Console.WriteLine($"      Bad ort. kural skoru   : {badItems.Average(r => (double)r.Result.RuleBasedResult.TotalScore / r.Result.RuleBasedResult.MaxScore):P0}");
+        if (goodItems.Count > 0)
+            Console.WriteLine($"      Good ort. ML skoru : {goodItems.Average(r => r.Result.MLResult.PredictedScore):F0}");
+        if (badItems.Count > 0)
+            Console.WriteLine($"      Bad ort. ML skoru  : {badItems.Average(r => r.Result.MLResult.PredictedScore):F0}");
+        if (goodItems.Count > 0)
+            Console.WriteLine($"      Good ort. kural     : {goodItems.Average(r => (double)r.Result.RuleBasedResult.TotalScore / r.Result.RuleBasedResult.MaxScore):P0}");
+        if (badItems.Count > 0)
+            Console.WriteLine($"      Bad ort. kural      : {badItems.Average(r => (double)r.Result.RuleBasedResult.TotalScore / r.Result.RuleBasedResult.MaxScore):P0}");
 
-        // Yanlis tahmin edilen ornekler
-        var wrong = results.Where(r => !r.Correct).ToList();
-        if (wrong.Count > 0)
+        var wrongMl = results.Where(r => !r.MlMatchesLabel).ToList();
+        if (wrongMl.Count > 0)
         {
-            Console.WriteLine($"\n  [YANLIS TAHMIN EDILEN ORNEKLER]");
-            foreach (var w in wrong)
-            {
+            Console.WriteLine($"\n  [ML ILE YANLIS TAHMIN]");
+            foreach (var w in wrongMl)
                 Console.WriteLine($"      #{w.Item.Id}: Tahmin={w.Result.MLResult.PredictedLabel}, Gercek={w.Item.Label} (guven: {w.Result.MLResult.Confidence:P0})");
-            }
         }
 
         Console.WriteLine("------------------------------------------");
@@ -239,7 +263,7 @@ class Program
         Console.WriteLine("Pipeline Parametreleri:");
         Console.WriteLine("  --json                 JSON cikti uret");
         Console.WriteLine("  --ci                   Sessiz mod (banner yok)");
-        Console.WriteLine("  --min-score=75         Minimum basari esigi (varsayilan: 65)");
+        Console.WriteLine("  --min-score=75         Minimum basari esigi (varsayilan: config/hybrid.json qualityThreshold)");
         Console.WriteLine("  --report=rapor.md      PR raporu dosyasina yaz (pr-check modu)");
         Console.WriteLine();
         Console.WriteLine("Exit Kodlari:");
@@ -277,7 +301,8 @@ class Program
         }
 
         var config = ConfigLoader.LoadRules("config/rules.json");
-        var hybrid = new HybridAnalyzer(config, "models/model.json");
+        var hybridCfg = ConfigLoader.LoadHybrid("config/hybrid.json");
+        var hybrid = new HybridAnalyzer(config, hybridCfg, "models/model.json");
 
         var dosyaSonuclari = new List<(string Dosya, HybridResult Sonuc, bool Gecti)>();
         int gecenSayisi = 0;
@@ -504,7 +529,8 @@ class Program
 
         // Analiz
         var config = ConfigLoader.LoadRules("config/rules.json");
-        var hybrid = new HybridAnalyzer(config, "models/model.json");
+        var hybridCfg = ConfigLoader.LoadHybrid("config/hybrid.json");
+        var hybrid = new HybridAnalyzer(config, hybridCfg, "models/model.json");
         var result = hybrid.Analyze(sourceCode);
 
         double rulePercent = result.RuleBasedResult.MaxScore > 0
@@ -523,6 +549,15 @@ class Program
                 birlesik_skor = result.CombinedScore,
                 min_esik = minScore,
                 gecti = passed,
+                kalite_tanimi = new
+                {
+                    q_formulu = $"Q = w_k*K + w_m*M (K: kural %, M: ML skoru)",
+                    rule_weight = hybridCfg.RuleWeight,
+                    ml_weight = hybridCfg.MLWeight,
+                    quality_threshold = hybridCfg.QualityThreshold,
+                    strong_agreement_high_rule_percent = hybridCfg.StrongAgreementHighRulePercent,
+                    strong_agreement_low_rule_percent = hybridCfg.StrongAgreementLowRulePercent
+                },
                 kural_bazli = new
                 {
                     skor = result.RuleBasedResult.TotalScore,

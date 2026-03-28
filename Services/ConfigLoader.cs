@@ -13,5 +13,15 @@ namespace AIOOPAnalyzer.Services
             return JsonSerializer.Deserialize<RulesConfig>(json, options)
                    ?? new RulesConfig();
         }
+
+        public static HybridConfig LoadHybrid(string path = "config/hybrid.json")
+        {
+            if (!File.Exists(path))
+                return new HybridConfig();
+            var json = File.ReadAllText(path);
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            return JsonSerializer.Deserialize<HybridConfig>(json, options)
+                   ?? new HybridConfig();
+        }
     }
 }
