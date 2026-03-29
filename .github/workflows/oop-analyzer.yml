@@ -16,7 +16,7 @@ jobs:
       contents: read
 
     steps:
-      # 1) Repo'yu checkout et
+      # 1) Repo'yu checkout e
       - name: Repo'yu indir
         uses: actions/checkout@v4
         with:
