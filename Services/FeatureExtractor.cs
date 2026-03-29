@@ -56,7 +56,7 @@ namespace AIOOPAnalyzer.Services
                 : 0;
 
             // ── INHERITANCE ──
-            features.InheritanceCount = classes.Count(c => c.Interfaces.Count > 0); // BaseList
+            features.InheritanceCount = classes.Count(c => !string.IsNullOrEmpty(c.BaseClassName));
             features.ClassesWithInheritance = features.InheritanceCount;
 
             // ── POLYMORPHISM ──

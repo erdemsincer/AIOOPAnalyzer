@@ -14,6 +14,8 @@ namespace AIOOPAnalyzer.Models
         public List<string> Properties { get; set; } = new();
         public List<string> ObjectCreations { get; set; } = new();
         public List<string> Interfaces { get; set; } = new();
+        /// <summary>Base class ismi (kalitim). Bos ise turetilmemis.</summary>
+        public string BaseClassName { get; set; } = "";
         public List<MethodInfo> Methods { get; set; } = new();
     }
 

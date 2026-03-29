@@ -69,12 +69,33 @@ namespace AIOOPAnalyzer.Services
                 {
                     classInfo.ObjectCreations.Add(creation.Type.ToString());
                 }
-                // INTERFACES
+                // INTERFACES & BASE CLASS
                 if (cls.BaseList != null)
                 {
                     foreach (var baseType in cls.BaseList.Types)
                     {
-                        classInfo.Interfaces.Add(baseType.Type.ToString());
+                        var typeName = baseType.Type.ToString();
+
+                        // Interface isimleri genelde 'I' ile baslar (IService, IRepository vb.)
+                        // veya root'ta interface declaration olarak tanimlanmis mi kontrol et
+                        var isInterface = typeName.Length > 1 && typeName.StartsWith("I") && char.IsUpper(typeName[1]);
+
+                        // Ayrica kaynak kodda interface olarak tanimlanmis mi bak
+                        var interfaceDecls = root.DescendantNodes().OfType<InterfaceDeclarationSyntax>();
+                        if (interfaceDecls.Any(i => i.Identifier.ToString() == typeName))
+                        {
+                            isInterface = true;
+                        }
+
+                        if (isInterface)
+                        {
+                            classInfo.Interfaces.Add(typeName);
+                        }
+                        else
+                        {
+                            // Base class (kalitim)
+                            classInfo.BaseClassName = typeName;
+                        }
                     }
                 }
 

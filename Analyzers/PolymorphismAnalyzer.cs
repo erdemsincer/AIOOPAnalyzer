@@ -12,13 +12,25 @@ namespace AIOOPAnalyzer.Analyzers
             int max = rule.MaxScore;
             int score = max;
 
+            // Hic virtual veya override metod yoksa polimorfizm kullanilmiyor
+            bool hasAnyPolymorphism = code.Classes.Any(c =>
+                c.Methods.Any(m => m.IsVirtual || m.IsOverride));
+
+            if (!hasAnyPolymorphism)
+            {
+                result.Issues.Add($"[Polimorfizm] Kodda hic virtual veya override metod bulunamadi. Polimorfizm kullanilmiyor.");
+                score -= rule.PenaltyPerViolation;
+            }
+
+            // Base class'i olan ama override kullanmayan siniflar
             foreach (var cls in code.Classes)
             {
-                foreach (var method in cls.Methods)
+                if (!string.IsNullOrEmpty(cls.BaseClassName))
                 {
-                    if (method.IsOverride)
+                    bool hasOverride = cls.Methods.Any(m => m.IsOverride);
+                    if (!hasOverride)
                     {
-                        result.Issues.Add($"[Polimorfizm] '{cls.Name}' sinifindaki '{method.Name}' metodu override kullaniyor. Base siniftaki virtual metod dogrulanmali.");
+                        result.Issues.Add($"[Polimorfizm] '{cls.Name}' sinifi '{cls.BaseClassName}' siniftan turetilmis ama hicbir metodu override etmiyor.");
                         score -= rule.PenaltyPerViolation;
                     }
                 }

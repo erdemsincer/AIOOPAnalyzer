@@ -13,7 +13,8 @@ namespace AIOOPAnalyzer.Analyzers
 
             foreach (var cls in code.Classes)
             {
-                if (cls.Interfaces.Count == 0)
+                // BaseClassName bos ise bu sinif hicbir base class'tan turetilmemis
+                if (string.IsNullOrEmpty(cls.BaseClassName))
                 {
                     result.Issues.Add($"[Kalitim] '{cls.Name}' sinifi hicbir base siniftan turetilmemis.");
                     score -= rule.PenaltyPerViolation;
