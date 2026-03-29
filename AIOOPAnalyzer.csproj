@@ -11,10 +11,16 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
   </ItemGroup>
 
+  <!-- Test/ornek dosyalarini derlemeye dahil etme -->
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+  </ItemGroup>
+
+  <!-- Runtime kaynak dosyalari -->
   <ItemGroup>
     <None Update="config/**" CopyToOutputDirectory="PreserveNewest" />
     <None Update="data/**" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="models/**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Models/model.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

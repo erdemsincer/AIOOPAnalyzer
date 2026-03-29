@@ -3,6 +3,64 @@
 C# kodlarinin OOP/SOLID kalitesini analiz eden hibrit (kural bazli + ML) arac.
 PR acildiginda otomatik calisir, kod kalitesini olcer ve sonucu PR yorumu olarak yazar.
 
+## Proje Yapisi
+
+```
+AIOOPAnalyzer/
+|-- Program.cs                  # Ana giris noktasi (train, analyze, batch, pipeline, pr-check)
+|-- AIOOPAnalyzer.csproj        # Proje dosyasi
+|
+|-- Analyzers/                  # OOP/SOLID kural analizciileri
+|   |-- Analyzers.cs            # IAnalyzer arayuzu
+|   |-- EncapsulationAnalyzer.cs
+|   |-- SRPAnalyzer.cs
+|   |-- DIAnalyzer.cs
+|   |-- InterfaceAnalyzer.cs
+|   |-- InheritanceAnalyzer.cs
+|   +-- PolymorphismAnalyzer.cs
+|
+|-- Models/                     # Veri modelleri
+|   |-- CodeStructure.cs        # Roslyn parse sonucu (ClassInfo, MethodInfo)
+|   |-- TrainingFeatures.cs     # 20 ozellik vektoru
+|   |-- AnalysisResult.cs       # Kural bazli analiz sonucu
+|   |-- PredictionResult.cs     # ML tahmin sonucu
+|   |-- RuleResult.cs           # Tekil kural sonucu
+|   |-- RulesConfig.cs          # rules.json modeli
+|   |-- HybridConfig.cs         # hybrid.json modeli
+|   |-- DatasetItem.cs          # Veri seti ogesi
+|   +-- TrainedModel.cs         # Egitilmis model yapisi
+|
+|-- Services/                   # Is mantigi servisleri
+|   |-- CodeParserService.cs    # Roslyn AST parser
+|   |-- FeatureExtractor.cs     # 20 ozellik cikarimi
+|   |-- ModelTrainer.cs         # k-NN model egitimi + LOO cross-validation
+|   |-- ModelPredictor.cs       # k-NN tahmin (k=3, agirlikli)
+|   |-- HybridAnalyzer.cs      # Kural + ML hibrit birlestirme
+|   |-- AnalyzerService.cs      # 6 analizci kayit/yonetimi
+|   |-- ConfigLoader.cs         # JSON config yukleyici
+|   |-- DatasetLoader.cs        # Veri seti yukleyici
+|   |-- DatasetValidator.cs     # Veri seti dogrulayici
+|   +-- BatchEvaluationMetrics.cs # Karisiklik matrisi, dogruluk metrikleri
+|
+|-- config/                     # Yapilandirma dosyalari
+|   |-- rules.json              # 6 kural tanimlari (maks puan, ceza)
+|   +-- hybrid.json             # Hibrit agirliklar ve esik degerleri
+|
+|-- data/
+|   +-- dataset.json            # 40 etiketli egitim ornegi (20 Good + 20 Bad)
+|
+|-- tests/                      # Ornek test dosyalari (derlemeye dahil degil)
+|   |-- test-good.cs            # Iyi OOP ornegi
+|   |-- test-good-report.cs     # Iyi OOP ornegi (ReportService)
+|   |-- test-bad-shopping.cs    # Kotu OOP ornegi (ShoppingCart)
+|   |-- test-bad-student.cs     # Kotu OOP ornegi (StudentManager)
+|   |-- test-bad-payment.cs     # Kotu OOP ornegi (PaymentService)
+|   +-- test-mid.cs             # Orta seviye ornek
+|
++-- .github/workflows/
+    +-- oop-analyzer.yml        # GitHub Actions PR kontrol workflow'u
+```
+
 ## Nasil Calisir?
 
 ```
@@ -99,25 +157,15 @@ dotnet run pipeline dosya.cs --json
 
 ### Ornek PR Yorumu
 
-```
-## AI OOP Analyzer - PR Kontrol Sonucu: KALDI
+PR'a otomatik eklenen rapor ornegi:
 
-### Genel Ozet
+- **Shield.io badge'leri** ile sonuc, skor, dosya sayisi ve esik degeri
+- **ASCII progress bar** ile ortalama skor gosterimi
+- **Skor dagilim cubugu** ile tum dosyalarin karsilastirmasi
+- **Kategorili sorun gruplama** (Kapsulleme, SRP, DI, Arayuz, Kalitim, Polimorfizm)
+- **Collapse bolumler** ile teknik detaylar
 
-| Metrik | Deger |
-|--------|-------|
-| Analiz edilen dosya | 3 |
-| Gecen dosya | 1 |
-| Kalan dosya | 2 |
-| Ortalama skor | 40.6/100 |
-
-### Dosya Detaylari
-
-| Dosya | Skor | Kural | ML | Karar |
-|-------|------|-------|----|-------|
-| OrderService.cs | 24.6/100 | 30% | Bad (17) | KALDI |
-| Order.cs | 72.5/100 | 60% | Good (91) | GECTI |
-```
+Ornek goruntu icin herhangi bir PR'in yorumlarini inceleyin.
 
 ### Merge Korumasi Ayarlama
 

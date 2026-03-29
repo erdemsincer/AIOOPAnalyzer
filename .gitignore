@@ -1,7 +1,7 @@
 bin/
 obj/
-models/model.json
+Models/model.json
 pr-report*.md
-test-*.cs
 *.user
 .vs/
+.vscode/

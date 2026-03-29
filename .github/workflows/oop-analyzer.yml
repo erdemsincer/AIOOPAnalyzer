@@ -41,7 +41,7 @@ jobs:
         id: changed
         run: |
           # PR'in base branch'ine gore degisen .cs dosyalarini bul
-          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- '*.cs' | grep -v 'obj/' | grep -v 'bin/' | grep -v 'test-' || true)
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- '*.cs' | grep -v 'obj/' | grep -v 'bin/' | grep -v 'tests/' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "Analiz edilecek .cs dosyasi bulunamadi."
