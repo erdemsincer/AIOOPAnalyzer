@@ -37,6 +37,12 @@
       "MaxScore": 20,
       "PenaltyPerViolation": 10,
       "Description": "Override ve virtual mekanizmaları doğru kullanılmalı"
+    },
+    {
+      "RuleName": "CK Metrics",
+      "MaxScore": 15,
+      "PenaltyPerViolation": 3,
+      "Description": "Chidamber & Kemerer metrikleri: WMC, DIT, NOC, CBO, RFC, LCOM eşik değerlerini aşmamalı"
     }
   ]
 }

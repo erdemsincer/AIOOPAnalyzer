@@ -21,7 +21,8 @@ namespace AIOOPAnalyzer.Services
                 { "Dependency Injection", new DIAnalyzer() },
                 { "Interfaces", new InterfaceAnalyzer() },
                 { "Inheritance", new InheritanceAnalyzer() },
-                { "Polymorphism", new PolymorphismAnalyzer() }
+                { "Polymorphism", new PolymorphismAnalyzer() },
+                { "CK Metrics", new CKMetricsRuleAnalyzer() }
             };
         }
 

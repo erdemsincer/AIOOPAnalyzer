@@ -5,10 +5,16 @@ on:
     branches: [ main, master, develop ]
     paths:
       - '**/*.cs'
+  workflow_dispatch:
+    inputs:
+      min_score:
+        description: 'Minimum kalite skoru (0-100)'
+        required: false
+        default: '65'
 
 jobs:
   oop-analiz:
-    name: OOP Kalite Analizi
+    name: OOP + CK Metrikleri Analizi
     runs-on: ubuntu-latest
 
     permissions:

@@ -1,5 +1,7 @@
+using System;
 using System.Linq;
 using AIOOPAnalyzer.Models;
+using AIOOPAnalyzer.Analyzers;
 
 namespace AIOOPAnalyzer.Services
 {
@@ -9,6 +11,7 @@ namespace AIOOPAnalyzer.Services
     public class FeatureExtractor
     {
         private readonly int _methodThreshold;
+        private readonly CKMetricsAnalyzer _ckAnalyzer = new();
 
         public FeatureExtractor(int methodThreshold = 2)
         {
@@ -64,6 +67,18 @@ namespace AIOOPAnalyzer.Services
             features.OverrideMethodCount = classes.Sum(c => c.Methods.Count(m => m.IsOverride));
             features.ClassesWithPolymorphism = classes
                 .Count(c => c.Methods.Any(m => m.IsVirtual || m.IsOverride));
+
+            // ── CK METRİKLERİ (Chidamber & Kemerer) ──
+            var ckMetrics = _ckAnalyzer.Calculate(code);
+            if (ckMetrics.Count > 0)
+            {
+                features.AvgWMC = Math.Round(ckMetrics.Average(m => m.WMC), 2);
+                features.MaxDIT = ckMetrics.Max(m => m.DIT);
+                features.AvgNOC = Math.Round(ckMetrics.Average(m => m.NOC), 2);
+                features.AvgCBO = Math.Round(ckMetrics.Average(m => m.CBO), 2);
+                features.AvgRFC = Math.Round(ckMetrics.Average(m => m.RFC), 2);
+                features.AvgLCOM = Math.Round(ckMetrics.Average(m => m.LCOM), 2);
+            }
 
             return features;
         }

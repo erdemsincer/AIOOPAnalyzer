@@ -49,6 +49,20 @@ namespace AIOOPAnalyzer.Models
         /// <summary>virtual veya override kullanan sınıf sayısı</summary>
         public int ClassesWithPolymorphism { get; set; }
 
+        // ── CK METRİKLERİ (Chidamber & Kemerer) ──
+        /// <summary>Weighted Methods per Class — ortalama cyclomatic complexity toplamı</summary>
+        public double AvgWMC { get; set; }
+        /// <summary>Depth of Inheritance Tree — maksimum kalıtım derinliği</summary>
+        public int MaxDIT { get; set; }
+        /// <summary>Number of Children — ortalama alt sınıf sayısı</summary>
+        public double AvgNOC { get; set; }
+        /// <summary>Coupling Between Object Classes — ortalama bağımlılık sayısı</summary>
+        public double AvgCBO { get; set; }
+        /// <summary>Response for a Class — ortalama yanıt sayısı</summary>
+        public double AvgRFC { get; set; }
+        /// <summary>Lack of Cohesion of Methods — ortalama uyumsuzluk</summary>
+        public double AvgLCOM { get; set; }
+
         // ── EĞİTİM HEDEFLERİ (dataset'ten gelir, tahmin sırasında boş) ──
         /// <summary>"Good" = 1, "Bad" = 0 — sınıflandırma hedefi</summary>
         public int LabelNumeric { get; set; }
@@ -79,7 +93,14 @@ namespace AIOOPAnalyzer.Models
                 ClassesWithInheritance,
                 VirtualMethodCount,
                 OverrideMethodCount,
-                ClassesWithPolymorphism
+                ClassesWithPolymorphism,
+                // CK Metrikleri
+                AvgWMC,
+                MaxDIT,
+                AvgNOC,
+                AvgCBO,
+                AvgRFC,
+                AvgLCOM
             };
         }
 
@@ -105,7 +126,14 @@ namespace AIOOPAnalyzer.Models
             "ClassesWithInheritance",
             "VirtualMethodCount",
             "OverrideMethodCount",
-            "ClassesWithPolymorphism"
+            "ClassesWithPolymorphism",
+            // CK Metrikleri
+            "AvgWMC",
+            "MaxDIT",
+            "AvgNOC",
+            "AvgCBO",
+            "AvgRFC",
+            "AvgLCOM"
         };
     }
 }

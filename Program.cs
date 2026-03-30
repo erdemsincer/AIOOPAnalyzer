@@ -536,6 +536,58 @@ class Program
                 sb.AppendLine($"| En yakin ornekler | {string.Join(", ", sonuc.MLResult.NearestNeighbors)} |");
                 sb.AppendLine();
                 sb.AppendLine("</details>");
+
+                // CK Metrikleri tablosu
+                if (sonuc.CKMetricsPerClass != null && sonuc.CKMetricsPerClass.Count > 0)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("<details>");
+                    sb.AppendLine("<summary><b>CK Metrikleri — Chidamber & Kemerer</b></summary>");
+                    sb.AppendLine();
+
+                    // Sınıf bazlı tablo
+                    sb.AppendLine("| Sinif | WMC | DIT | NOC | CBO | RFC | LCOM | Not |");
+                    sb.AppendLine("|:------|----:|----:|----:|----:|----:|-----:|:---:|");
+
+                    foreach (var ck in sonuc.CKMetricsPerClass)
+                    {
+                        int ckIssues = (ck.WMC > 10 ? 1 : 0) + (ck.DIT > 3 ? 1 : 0) + (ck.CBO > 5 ? 1 : 0) +
+                                       (ck.RFC > 20 ? 1 : 0) + (ck.LCOM > 3 ? 1 : 0);
+                        string grade = ckIssues == 0 ? "A+" : ckIssues == 1 ? "B" : ckIssues == 2 ? "C" : ckIssues <= 3 ? "D" : "F";
+                        string gradeIcon = ckIssues == 0 ? "🏆" : ckIssues <= 1 ? "👍" : ckIssues <= 2 ? "⚠️" : "❌";
+
+                        string wmcFmt = ck.WMC > 10 ? $"**{ck.WMC}** 🔴" : $"{ck.WMC} ✅";
+                        string ditFmt = ck.DIT > 3 ? $"**{ck.DIT}** 🔴" : $"{ck.DIT} ✅";
+                        string nocFmt = $"{ck.NOC}";
+                        string cboFmt = ck.CBO > 5 ? $"**{ck.CBO}** 🔴" : $"{ck.CBO} ✅";
+                        string rfcFmt = ck.RFC > 20 ? $"**{ck.RFC}** 🔴" : $"{ck.RFC} ✅";
+                        string lcomFmt = ck.LCOM > 3 ? $"**{ck.LCOM}** 🔴" : $"{ck.LCOM} ✅";
+
+                        sb.AppendLine($"| `{ck.ClassName}` | {wmcFmt} | {ditFmt} | {nocFmt} | {cboFmt} | {rfcFmt} | {lcomFmt} | {gradeIcon} {grade} |");
+                    }
+
+                    // Ortalama satır
+                    var ckAvg = sonuc.CKMetricsAverage;
+                    if (ckAvg != null)
+                    {
+                        sb.AppendLine($"| **Ortalama** | **{ckAvg.WMC}** | **{ckAvg.DIT}** | **{ckAvg.NOC}** | **{ckAvg.CBO}** | **{ckAvg.RFC}** | **{ckAvg.LCOM}** | — |");
+                    }
+
+                    sb.AppendLine();
+
+                    // Eşik açıklama tablosu
+                    sb.AppendLine("| Metrik | Aciklama | Esik | Ideal |");
+                    sb.AppendLine("|:-------|:---------|-----:|:------|");
+                    sb.AppendLine("| WMC | Sinif Basina Agirlikli Metod | ≤ 10 | Dusuk = basit sinif |");
+                    sb.AppendLine("| DIT | Kalitim Agacinin Derinligi | ≤ 3 | Derin kalitim = zor bakim |");
+                    sb.AppendLine("| NOC | Alt Sinif Sayisi | ≤ 5 | Cok fazla = soyut tasarim eksik |");
+                    sb.AppendLine("| CBO | Nesneler Arasi Bagimlilik | ≤ 5 | Dusuk = gevsek baglilik |");
+                    sb.AppendLine("| RFC | Sinif Yanit Sayisi | ≤ 20 | Dusuk = odakli sinif |");
+                    sb.AppendLine("| LCOM | Uyumsuzluk (Lack of Cohesion) | ≤ 3 | 0 = mukemmel uyum |");
+                    sb.AppendLine();
+                    sb.AppendLine("</details>");
+                }
+
                 sb.AppendLine();
             }
         }
@@ -561,16 +613,38 @@ class Program
             // Gecen dosyalarin da kurallarini goster (collapse)
             foreach (var (dosya, sonuc, _) in gecenDosyalar)
             {
-                if (sonuc.RuleBasedResult.Issues.Count > 0)
+                bool hasIssues = sonuc.RuleBasedResult.Issues.Count > 0;
+                bool hasCK = sonuc.CKMetricsPerClass != null && sonuc.CKMetricsPerClass.Count > 0;
+
+                if (hasIssues || hasCK)
                 {
                     sb.AppendLine($"<details>");
-                    sb.AppendLine($"<summary><code>{dosya}</code> - kucuk sorunlar ({sonuc.RuleBasedResult.Issues.Count})</summary>");
+                    string summary = hasIssues
+                        ? $"<code>{dosya}</code> - kucuk sorunlar ({sonuc.RuleBasedResult.Issues.Count}) + CK metrikleri"
+                        : $"<code>{dosya}</code> - CK metrikleri";
+                    sb.AppendLine($"<summary>{summary}</summary>");
                     sb.AppendLine();
-                    foreach (var issue in sonuc.RuleBasedResult.Issues)
+
+                    if (hasIssues)
                     {
-                        sb.AppendLine($"- {issue}");
+                        foreach (var issue in sonuc.RuleBasedResult.Issues)
+                        {
+                            sb.AppendLine($"- {issue}");
+                        }
+                        sb.AppendLine();
                     }
-                    sb.AppendLine();
+
+                    if (hasCK)
+                    {
+                        sb.AppendLine("| Sinif | WMC | DIT | NOC | CBO | RFC | LCOM |");
+                        sb.AppendLine("|:------|----:|----:|----:|----:|----:|-----:|");
+                        foreach (var ck in sonuc.CKMetricsPerClass!)
+                        {
+                            sb.AppendLine($"| `{ck.ClassName}` | {ck.WMC} | {ck.DIT} | {ck.NOC} | {ck.CBO} | {ck.RFC} | {ck.LCOM} |");
+                        }
+                        sb.AppendLine();
+                    }
+
                     sb.AppendLine("</details>");
                     sb.AppendLine();
                 }
@@ -580,9 +654,9 @@ class Program
         // ── FOOTER ──
         sb.AppendLine("---");
         sb.AppendLine();
-        sb.AppendLine($"> **AI OOP Analyzer v2.0** -- Kural bazli + ML hibrit analiz");
+        sb.AppendLine($"> **AI OOP Analyzer v2.0** -- Kural bazli + ML hibrit analiz + CK Metrikleri");
         sb.AppendLine($"> ");
-        sb.AppendLine($"> Analiz: {DateTime.Now:yyyy-MM-dd HH:mm} | Esik: {minScore}/100 | Model: k-NN (k=3)");
+        sb.AppendLine($"> Analiz: {DateTime.Now:yyyy-MM-dd HH:mm} | Esik: {minScore}/100 | Model: k-NN (k=3) | CK: Chidamber & Kemerer");
 
         // Dosyaya yaz
         var dir = Path.GetDirectoryName(reportPath);
@@ -696,6 +770,37 @@ class Program
                     new_kullanimi = result.Features.ObjectCreationCount,
                     virtual_metod = result.Features.VirtualMethodCount,
                     override_metod = result.Features.OverrideMethodCount
+                },
+                ck_metrikleri = new
+                {
+                    sinif_bazli = result.CKMetricsPerClass?.Select(ck => new
+                    {
+                        sinif = ck.ClassName,
+                        wmc = ck.WMC,
+                        dit = ck.DIT,
+                        noc = ck.NOC,
+                        cbo = ck.CBO,
+                        rfc = ck.RFC,
+                        lcom = ck.LCOM
+                    }),
+                    ortalama = result.CKMetricsAverage != null ? new
+                    {
+                        wmc = result.CKMetricsAverage.WMC,
+                        dit = result.CKMetricsAverage.DIT,
+                        noc = result.CKMetricsAverage.NOC,
+                        cbo = result.CKMetricsAverage.CBO,
+                        rfc = result.CKMetricsAverage.RFC,
+                        lcom = result.CKMetricsAverage.LCOM
+                    } : null,
+                    esikler = new
+                    {
+                        wmc = "≤ 10",
+                        dit = "≤ 3",
+                        noc = "≤ 5",
+                        cbo = "≤ 5",
+                        rfc = "≤ 20",
+                        lcom = "≤ 3"
+                    }
                 }
             };
 
