@@ -229,3 +229,5 @@ Kendi orneklerinizi ekleyerek modeli guclendirebilirsiniz.
 - **Roslyn** — C# syntax tree analizi
 - **k-NN** — ML tahmini (pure C#, harici ML kutuphanesi yok)
 - **GitHub Actions** — CI/CD entegrasyonu
+
+...
