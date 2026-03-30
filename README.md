@@ -136,11 +136,11 @@ dotnet run pipeline dosya.cs --json
 
 ### Exit Kodlari
 
-| Kod | Anlam |
-|-----|-------|
-| 0 | Basarili — Tum dosyalar kaliteli |
-| 1 | Basarisiz — En az bir dosya kalitesiz |
-| 2 | Hata — Model yok, dosya bulunamadi vb. |
+| Kod | Anlam                                  |
+| --- | -------------------------------------- |
+| 0   | Basarili — Tum dosyalar kaliteli       |
+| 1   | Basarisiz — En az bir dosya kalitesiz  |
+| 2   | Hata — Model yok, dosya bulunamadi vb. |
 
 ## GitHub Actions Entegrasyonu
 
@@ -180,14 +180,14 @@ Boylece kalitesiz kod merge edilemez.
 
 ## Kurallar
 
-| Kural | Maks Puan | Ceza | Kontrol |
-|-------|-----------|------|---------|
-| Encapsulation | 15 | -5 | Public alanlar private/property olmali |
-| SRP | 15 | -5 | Sinif basi max 2 metod |
-| DI | 20 | -10 | new yerine constructor injection |
-| Interfaces | 15 | -5 | Siniflar interface implement etmeli |
-| Inheritance | 15 | -5 | Uygun yerlerde kalitim |
-| Polymorphism | 20 | -10 | virtual/override dogru kullanim |
+| Kural         | Maks Puan | Ceza | Kontrol                                |
+| ------------- | --------- | ---- | -------------------------------------- |
+| Encapsulation | 15        | -5   | Public alanlar private/property olmali |
+| SRP           | 15        | -5   | Sinif basi max 2 metod                 |
+| DI            | 20        | -10  | new yerine constructor injection       |
+| Interfaces    | 15        | -5   | Siniflar interface implement etmeli    |
+| Inheritance   | 15        | -5   | Uygun yerlerde kalitim                 |
+| Polymorphism  | 20        | -10  | virtual/override dogru kullanim        |
 
 Kurallar `config/rules.json` dosyasindan ayarlanabilir.
 
@@ -195,12 +195,12 @@ Kurallar `config/rules.json` dosyasindan ayarlanabilir.
 
 Tek bir yerde tanimlanir: birlesik skor **Q**, agirliklar ve Good/Bad kararinda kullanilan esikler.
 
-| Alan | Aciklama |
-|------|----------|
-| `ruleWeight`, `mlWeight` | Q = w_k * K + w_m * M (K: kural yuzdesi 0-100, M: k-NN skoru 0-100). Toplam 1 degilse agirliklar otomatik normalize edilir. |
-| `qualityThreshold` | Guclu uyum dallarindan sonra hala kararsiz kalinirsa: Q >= esik ise Good. `pr-check` ve `pipeline` icin `--min-score` verilmezse bu deger kullanilir. |
-| `strongAgreementHighRulePercent` | K bu degerin uzerinde ve ML Good ise -> Good. |
-| `strongAgreementLowRulePercent` | K bu degerin altinda ve ML Bad ise -> Bad. |
+| Alan                             | Aciklama                                                                                                                                              |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ruleWeight`, `mlWeight`         | Q = w*k * K + w*m * M (K: kural yuzdesi 0-100, M: k-NN skoru 0-100). Toplam 1 degilse agirliklar otomatik normalize edilir.                           |
+| `qualityThreshold`               | Guclu uyum dallarindan sonra hala kararsiz kalinirsa: Q >= esik ise Good. `pr-check` ve `pipeline` icin `--min-score` verilmezse bu deger kullanilir. |
+| `strongAgreementHighRulePercent` | K bu degerin uzerinde ve ML Good ise -> Good.                                                                                                         |
+| `strongAgreementLowRulePercent`  | K bu degerin altinda ve ML Bad ise -> Bad.                                                                                                            |
 
 **Yalniz kural (ablation):** Good <=> K >= `qualityThreshold` (batch istatistiklerinde kullanilir).
 
@@ -230,4 +230,4 @@ Kendi orneklerinizi ekleyerek modeli guclendirebilirsiniz.
 - **k-NN** — ML tahmini (pure C#, harici ML kutuphanesi yok)
 - **GitHub Actions** — CI/CD entegrasyonu
 
-...
+........
