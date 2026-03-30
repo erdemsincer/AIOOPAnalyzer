@@ -371,54 +371,70 @@ class Program
         int kalan = sonuclar.Count(s => !s.Gecti);
         int toplam = sonuclar.Count;
         double ortSkor = sonuclar.Average(s => s.Sonuc.CombinedScore);
+        double maxSkor = sonuclar.Max(s => s.Sonuc.CombinedScore);
+        double minSkor = sonuclar.Min(s => s.Sonuc.CombinedScore);
         bool tamamenGecti = kalan == 0;
 
-        // ── BASLIK VE BADGE'LER ──
+        // ═══════════════════════════════════════
+        // HEADER — Logo + Badge'ler
+        // ═══════════════════════════════════════
+        sb.AppendLine("<div align=\"center\">");
+        sb.AppendLine();
+        sb.AppendLine("# AI OOP Analyzer");
+        sb.AppendLine("### Kural Bazli + ML Hibrit Kod Kalite Raporu");
+        sb.AppendLine();
+
         string durumRenk = tamamenGecti ? "brightgreen" : "red";
         string durumText = tamamenGecti ? "GECTI" : "KALDI";
         string skorRenk = ortSkor >= 80 ? "brightgreen" : ortSkor >= 65 ? "yellow" : ortSkor >= 40 ? "orange" : "red";
+        string skorHarf = ortSkor >= 90 ? "A+" : ortSkor >= 80 ? "A" : ortSkor >= 70 ? "B" : ortSkor >= 60 ? "C" : ortSkor >= 40 ? "D" : "F";
 
-        sb.AppendLine($"# AI OOP Analyzer - Kod Kalite Raporu");
+        sb.AppendLine($"![Sonuc](https://img.shields.io/badge/Sonuc-{Uri.EscapeDataString(durumText)}-{durumRenk}?style=for-the-badge&logo=checkmarx)");
+        sb.AppendLine($"![Skor](https://img.shields.io/badge/Skor-{ortSkor:F0}%2F100_({skorHarf})-{skorRenk}?style=for-the-badge&logo=speedtest)");
+        sb.AppendLine($"![Dosya](https://img.shields.io/badge/Dosya-{toplam}-blue?style=for-the-badge&logo=files)");
+        sb.AppendLine($"![Model](https://img.shields.io/badge/Model-k--NN_(k%3D3)-purple?style=for-the-badge&logo=tensorflow)");
+        sb.AppendLine($"![CK](https://img.shields.io/badge/CK_Metrikleri-6_Metrik-teal?style=for-the-badge&logo=pocketcasts)");
         sb.AppendLine();
-        sb.AppendLine($"![Sonuc](https://img.shields.io/badge/Sonuc-{durumText}-{durumRenk}?style=for-the-badge)");
-        sb.AppendLine($"![Skor](https://img.shields.io/badge/Skor-{ortSkor:F0}%2F100-{skorRenk}?style=for-the-badge)");
-        sb.AppendLine($"![Dosya](https://img.shields.io/badge/Dosya-{toplam}-blue?style=for-the-badge)");
-        sb.AppendLine($"![Esik](https://img.shields.io/badge/Esik-{minScore}-lightgrey?style=for-the-badge)");
+        sb.AppendLine("</div>");
         sb.AppendLine();
 
-        // ── GENEL OZET KUTUSU ──
+        // ═══════════════════════════════════════
+        // GENEL DASHBOARD
+        // ═══════════════════════════════════════
         sb.AppendLine("---");
         sb.AppendLine();
-        sb.AppendLine("## Genel Ozet");
+        sb.AppendLine("## Genel Dashboard");
         sb.AppendLine();
 
-        // Progress bar (ASCII bloklar ile)
-        int barLen = 20;
-        int filled = (int)(ortSkor / 100.0 * barLen);
-        if (filled > barLen) filled = barLen;
-        string progressBar = new string('#', filled) + new string('-', barLen - filled);
-        sb.AppendLine($"```");
-        sb.AppendLine($"Ortalama Skor: [{progressBar}] {ortSkor:F1}/100");
-        sb.AppendLine($"```");
+        // Buyuk skor gostergesi
+        string skorBant = ortSkor >= 90 ? "Mukemmel" : ortSkor >= 80 ? "Cok Iyi" : ortSkor >= 70 ? "Iyi" : ortSkor >= 60 ? "Orta" : ortSkor >= 40 ? "Zayif" : "Yetersiz";
+        int barLen = 30;
+        int filled = Math.Min((int)(ortSkor / 100.0 * barLen), barLen);
+        string progressBar = new string('#', filled) + new string('.', barLen - filled);
+
+        sb.AppendLine($"> **Ortalama Skor: {ortSkor:F1}/100 ({skorHarf}) — {skorBant}**");
+        sb.AppendLine($"> ");
+        sb.AppendLine($"> `[{progressBar}]`");
         sb.AppendLine();
 
-        sb.AppendLine("| Metrik | Deger |");
-        sb.AppendLine("|:-------|------:|");
-        sb.AppendLine($"| Analiz edilen dosya | **{toplam}** |");
-        sb.AppendLine($"| Gecen dosya | **{gecen}** |");
-        sb.AppendLine($"| Kalan dosya | **{kalan}** |");
-        sb.AppendLine($"| Ortalama skor | **{ortSkor:F1}/100** |");
-        sb.AppendLine($"| Minimum esik | **{minScore}/100** |");
-        sb.AppendLine($"| Basari orani | **%{(toplam > 0 ? (double)gecen / toplam * 100 : 0):F0}** |");
+        // Genel istatistik tablosu (2 sutunlu layout)
+        sb.AppendLine("| Metrik | Deger | Analiz | Deger |");
+        sb.AppendLine("|:----------|:-----:|:----------|:-----:|");
+        sb.AppendLine($"| Analiz edilen dosya | **{toplam}** | Minimum esik | **{minScore}/100** |");
+        sb.AppendLine($"| Gecen dosya | **{gecen}** | Ortalama skor | **{ortSkor:F1}/100** |");
+        sb.AppendLine($"| Kalan dosya | **{kalan}** | En yuksek skor | **{maxSkor:F1}/100** |");
+        sb.AppendLine($"| Basari orani | **%{(toplam > 0 ? (double)gecen / toplam * 100 : 0):F0}** | En dusuk skor | **{minSkor:F1}/100** |");
         sb.AppendLine();
 
-        // ── DOSYA BAZLI DETAY TABLOSU ──
+        // ═══════════════════════════════════════
+        // DOSYA KARŞILAŞTIRMA TABLOSU
+        // ═══════════════════════════════════════
         sb.AppendLine("---");
         sb.AppendLine();
-        sb.AppendLine("## Dosya Detaylari");
+        sb.AppendLine("## Dosya Bazli Sonuclar");
         sb.AppendLine();
-        sb.AppendLine("| Durum | Dosya | Skor | Kural | ML Tahmin | Sorun |");
-        sb.AppendLine("|:-----:|-------|-----:|------:|-----------|------:|");
+        sb.AppendLine("| Durum | Dosya | Birlesik Skor | Kural Skoru | ML Tahmin | ML Guven | Sorun |");
+        sb.AppendLine("|:-----:|-------|:-------------:|:-----------:|:---------:|:--------:|:-----:|");
 
         foreach (var (dosya, sonuc, gecti) in sonuclar)
         {
@@ -426,30 +442,35 @@ class Program
                 ? (double)sonuc.RuleBasedResult.TotalScore / sonuc.RuleBasedResult.MaxScore * 100
                 : 0;
 
-            string durumIcon = gecti ? "[GECTI]" : "[KALDI]";
+            string durumIcon = gecti ? "GECTI" : "KALDI";
             int sorunSayisi = sonuc.RuleBasedResult.Issues.Count;
+            string mlIcon = sonuc.MLResult.PredictedLabel == "Good" ? "Good" : "Bad";
+            string sorunIcon = sorunSayisi == 0 ? "0" : $"{sorunSayisi}";
 
-            sb.AppendLine($"| {durumIcon} | `{dosya}` | **{sonuc.CombinedScore:F1}** | %{kuralYuzde:F0} | {sonuc.MLResult.PredictedLabel} ({sonuc.MLResult.PredictedScore:F0}) | {sorunSayisi} |");
+            sb.AppendLine($"| {durumIcon} | `{dosya}` | **{sonuc.CombinedScore:F1}** | %{kuralYuzde:F0} ({sonuc.RuleBasedResult.TotalScore}/{sonuc.RuleBasedResult.MaxScore}) | {mlIcon} ({sonuc.MLResult.PredictedScore:F0}) | %{sonuc.MLResult.Confidence * 100:F0} | {sorunIcon} |");
         }
         sb.AppendLine();
 
-        // ── HER DOSYANIN SKOR CUBUGU ──
+        // Skor bar grafigi
         sb.AppendLine("### Skor Dagilimi");
         sb.AppendLine();
         sb.AppendLine("```");
         foreach (var (dosya, sonuc, gecti) in sonuclar)
         {
-            string kısaDosya = dosya.Length > 35 ? "..." + dosya[^32..] : dosya;
-            int bar = (int)(sonuc.CombinedScore / 100.0 * 25);
-            if (bar > 25) bar = 25;
-            string skorBar = new string('=', bar) + new string(' ', 25 - bar);
-            string durumMark = gecti ? "OK" : "XX";
-            sb.AppendLine($"  {kısaDosya,-35} |{skorBar}| {sonuc.CombinedScore,5:F1} [{durumMark}]");
+            string kısaDosya = Path.GetFileName(dosya);
+            if (kısaDosya.Length > 30) kısaDosya = kısaDosya[..27] + "...";
+            int bar = Math.Min((int)(sonuc.CombinedScore / 100.0 * 30), 30);
+            string skorBar = new string('#', bar) + new string('.', 30 - bar);
+            string durumMark = gecti ? "PASS" : "FAIL";
+            sb.AppendLine($"  {kısaDosya,-30} |{skorBar}| {sonuc.CombinedScore,5:F1} [{durumMark}]");
         }
+        sb.AppendLine($"  {"-- Esik --",-30} |{"- ",-30}| {minScore,5}");
         sb.AppendLine("```");
         sb.AppendLine();
 
-        // ── KALAN DOSYALAR — DETAYLI SORUNLAR ──
+        // ═══════════════════════════════════════
+        // KALAN DOSYALAR — DETAYLI SORUNLAR
+        // ═══════════════════════════════════════
         var kalanDosyalar = sonuclar.Where(s => !s.Gecti).ToList();
         if (kalanDosyalar.Count > 0)
         {
@@ -460,139 +481,13 @@ class Program
 
             foreach (var (dosya, sonuc, _) in kalanDosyalar)
             {
-                double kuralYuzde = sonuc.RuleBasedResult.MaxScore > 0
-                    ? (double)sonuc.RuleBasedResult.TotalScore / sonuc.RuleBasedResult.MaxScore * 100
-                    : 0;
-
-                sb.AppendLine($"### `{dosya}`");
-                sb.AppendLine();
-
-                // Skor ozet satiri
-                string dosyaSkorRenk = sonuc.CombinedScore >= 80 ? "brightgreen" : sonuc.CombinedScore >= 65 ? "yellow" : sonuc.CombinedScore >= 40 ? "orange" : "red";
-                sb.AppendLine($"![Skor](https://img.shields.io/badge/Skor-{sonuc.CombinedScore:F0}%2F100-{dosyaSkorRenk}) ");
-                sb.AppendLine($"![Kural](https://img.shields.io/badge/Kural-%25{kuralYuzde:F0}-blue) ");
-                sb.AppendLine($"![ML](https://img.shields.io/badge/ML-{sonuc.MLResult.PredictedLabel}-{(sonuc.MLResult.PredictedLabel == "Good" ? "green" : "red")})");
-                sb.AppendLine();
-
-                // Kural bazli tablo
-                sb.AppendLine("| Kural | Skor | Maks | Durum |");
-                sb.AppendLine("|:------|-----:|-----:|:-----:|");
-                foreach (var rule in sonuc.RuleBasedResult.RuleResults)
-                {
-                    string rd = rule.Score == rule.MaxScore ? "Uygun" : "**IHLAL**";
-                    sb.AppendLine($"| {rule.RuleName} | {rule.Score} | {rule.MaxScore} | {rd} |");
-                }
-                sb.AppendLine();
-
-                // Sorunlar
-                if (sonuc.RuleBasedResult.Issues.Count > 0)
-                {
-                    sb.AppendLine($"<details>");
-                    sb.AppendLine($"<summary><b>Tespit edilen sorunlar ({sonuc.RuleBasedResult.Issues.Count} adet)</b></summary>");
-                    sb.AppendLine();
-
-                    // Sorunlari kategoriye gore grupla
-                    var grouped = sonuc.RuleBasedResult.Issues
-                        .GroupBy(i => {
-                            if (i.StartsWith("[Kapsulleme]")) return "Kapsulleme";
-                            if (i.StartsWith("[Tek Sorumluluk]")) return "Tek Sorumluluk (SRP)";
-                            if (i.StartsWith("[Bagimlilik Enjeksiyonu]")) return "Bagimlilik Enjeksiyonu (DI)";
-                            if (i.StartsWith("[Arayuz]")) return "Arayuz (Interface)";
-                            if (i.StartsWith("[Kalitim]")) return "Kalitim (Inheritance)";
-                            if (i.StartsWith("[Polimorfizm]")) return "Polimorfizm";
-                            return "Diger";
-                        });
-
-                    foreach (var group in grouped)
-                    {
-                        sb.AppendLine($"**{group.Key}:**");
-                        foreach (var issue in group)
-                        {
-                            sb.AppendLine($"- {issue}");
-                        }
-                        sb.AppendLine();
-                    }
-
-                    sb.AppendLine("</details>");
-                    sb.AppendLine();
-                }
-
-                // Teknik detaylar (collapse)
-                sb.AppendLine("<details>");
-                sb.AppendLine("<summary>Teknik detaylar</summary>");
-                sb.AppendLine();
-                sb.AppendLine("| Ozellik | Deger |");
-                sb.AppendLine("|:--------|------:|");
-                sb.AppendLine($"| Sinif sayisi | {sonuc.Features.ClassCount} |");
-                sb.AppendLine($"| Toplam metod | {sonuc.Features.TotalMethodCount} |");
-                sb.AppendLine($"| Public alan | {sonuc.Features.PublicFieldCount} |");
-                sb.AppendLine($"| Private alan | {sonuc.Features.PrivateFieldCount} |");
-                sb.AppendLine($"| Kapsulleme orani | %{sonuc.Features.EncapsulationRatio * 100:F0} |");
-                sb.AppendLine($"| Interface orani | %{sonuc.Features.InterfaceRatio * 100:F0} |");
-                sb.AppendLine($"| new kullanimi | {sonuc.Features.ObjectCreationCount} |");
-                sb.AppendLine($"| virtual metod | {sonuc.Features.VirtualMethodCount} |");
-                sb.AppendLine($"| override metod | {sonuc.Features.OverrideMethodCount} |");
-                sb.AppendLine($"| ML guven | %{sonuc.MLResult.Confidence * 100:F0} |");
-                sb.AppendLine($"| En yakin ornekler | {string.Join(", ", sonuc.MLResult.NearestNeighbors)} |");
-                sb.AppendLine();
-                sb.AppendLine("</details>");
-
-                // CK Metrikleri tablosu
-                if (sonuc.CKMetricsPerClass != null && sonuc.CKMetricsPerClass.Count > 0)
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("<details>");
-                    sb.AppendLine("<summary><b>CK Metrikleri — Chidamber & Kemerer</b></summary>");
-                    sb.AppendLine();
-
-                    // Sınıf bazlı tablo
-                    sb.AppendLine("| Sinif | WMC | DIT | NOC | CBO | RFC | LCOM | Not |");
-                    sb.AppendLine("|:------|----:|----:|----:|----:|----:|-----:|:---:|");
-
-                    foreach (var ck in sonuc.CKMetricsPerClass)
-                    {
-                        int ckIssues = (ck.WMC > 10 ? 1 : 0) + (ck.DIT > 3 ? 1 : 0) + (ck.CBO > 5 ? 1 : 0) +
-                                       (ck.RFC > 20 ? 1 : 0) + (ck.LCOM > 3 ? 1 : 0);
-                        string grade = ckIssues == 0 ? "A+" : ckIssues == 1 ? "B" : ckIssues == 2 ? "C" : ckIssues <= 3 ? "D" : "F";
-                        string gradeIcon = ckIssues == 0 ? "🏆" : ckIssues <= 1 ? "👍" : ckIssues <= 2 ? "⚠️" : "❌";
-
-                        string wmcFmt = ck.WMC > 10 ? $"**{ck.WMC}** 🔴" : $"{ck.WMC} ✅";
-                        string ditFmt = ck.DIT > 3 ? $"**{ck.DIT}** 🔴" : $"{ck.DIT} ✅";
-                        string nocFmt = $"{ck.NOC}";
-                        string cboFmt = ck.CBO > 5 ? $"**{ck.CBO}** 🔴" : $"{ck.CBO} ✅";
-                        string rfcFmt = ck.RFC > 20 ? $"**{ck.RFC}** 🔴" : $"{ck.RFC} ✅";
-                        string lcomFmt = ck.LCOM > 3 ? $"**{ck.LCOM}** 🔴" : $"{ck.LCOM} ✅";
-
-                        sb.AppendLine($"| `{ck.ClassName}` | {wmcFmt} | {ditFmt} | {nocFmt} | {cboFmt} | {rfcFmt} | {lcomFmt} | {gradeIcon} {grade} |");
-                    }
-
-                    // Ortalama satır
-                    var ckAvg = sonuc.CKMetricsAverage;
-                    if (ckAvg != null)
-                    {
-                        sb.AppendLine($"| **Ortalama** | **{ckAvg.WMC}** | **{ckAvg.DIT}** | **{ckAvg.NOC}** | **{ckAvg.CBO}** | **{ckAvg.RFC}** | **{ckAvg.LCOM}** | — |");
-                    }
-
-                    sb.AppendLine();
-
-                    // Eşik açıklama tablosu
-                    sb.AppendLine("| Metrik | Aciklama | Esik | Ideal |");
-                    sb.AppendLine("|:-------|:---------|-----:|:------|");
-                    sb.AppendLine("| WMC | Sinif Basina Agirlikli Metod | ≤ 10 | Dusuk = basit sinif |");
-                    sb.AppendLine("| DIT | Kalitim Agacinin Derinligi | ≤ 3 | Derin kalitim = zor bakim |");
-                    sb.AppendLine("| NOC | Alt Sinif Sayisi | ≤ 5 | Cok fazla = soyut tasarim eksik |");
-                    sb.AppendLine("| CBO | Nesneler Arasi Bagimlilik | ≤ 5 | Dusuk = gevsek baglilik |");
-                    sb.AppendLine("| RFC | Sinif Yanit Sayisi | ≤ 20 | Dusuk = odakli sinif |");
-                    sb.AppendLine("| LCOM | Uyumsuzluk (Lack of Cohesion) | ≤ 3 | 0 = mukemmel uyum |");
-                    sb.AppendLine();
-                    sb.AppendLine("</details>");
-                }
-
-                sb.AppendLine();
+                WriteDosyaDetay(sb, dosya, sonuc, minScore, true);
             }
         }
 
-        // ── GECEN DOSYALAR ──
+        // ═══════════════════════════════════════
+        // GECEN DOSYALAR
+        // ═══════════════════════════════════════
         var gecenDosyalar = sonuclar.Where(s => s.Gecti).ToList();
         if (gecenDosyalar.Count > 0)
         {
@@ -603,66 +498,427 @@ class Program
 
             foreach (var (dosya, sonuc, _) in gecenDosyalar)
             {
-                int sorunSayisi = sonuc.RuleBasedResult.Issues.Count;
-                string ek = sorunSayisi > 0 ? $" -- {sorunSayisi} kucuk sorun" : " -- sorun yok";
-                string dSkorRenk = sonuc.CombinedScore >= 80 ? "brightgreen" : "yellow";
-                sb.AppendLine($"- ![ok](https://img.shields.io/badge/-{sonuc.CombinedScore:F0}%2F100-{dSkorRenk}?style=flat-square) `{dosya}`{ek}");
-            }
-            sb.AppendLine();
-
-            // Gecen dosyalarin da kurallarini goster (collapse)
-            foreach (var (dosya, sonuc, _) in gecenDosyalar)
-            {
-                bool hasIssues = sonuc.RuleBasedResult.Issues.Count > 0;
-                bool hasCK = sonuc.CKMetricsPerClass != null && sonuc.CKMetricsPerClass.Count > 0;
-
-                if (hasIssues || hasCK)
-                {
-                    sb.AppendLine($"<details>");
-                    string summary = hasIssues
-                        ? $"<code>{dosya}</code> - kucuk sorunlar ({sonuc.RuleBasedResult.Issues.Count}) + CK metrikleri"
-                        : $"<code>{dosya}</code> - CK metrikleri";
-                    sb.AppendLine($"<summary>{summary}</summary>");
-                    sb.AppendLine();
-
-                    if (hasIssues)
-                    {
-                        foreach (var issue in sonuc.RuleBasedResult.Issues)
-                        {
-                            sb.AppendLine($"- {issue}");
-                        }
-                        sb.AppendLine();
-                    }
-
-                    if (hasCK)
-                    {
-                        sb.AppendLine("| Sinif | WMC | DIT | NOC | CBO | RFC | LCOM |");
-                        sb.AppendLine("|:------|----:|----:|----:|----:|----:|-----:|");
-                        foreach (var ck in sonuc.CKMetricsPerClass!)
-                        {
-                            sb.AppendLine($"| `{ck.ClassName}` | {ck.WMC} | {ck.DIT} | {ck.NOC} | {ck.CBO} | {ck.RFC} | {ck.LCOM} |");
-                        }
-                        sb.AppendLine();
-                    }
-
-                    sb.AppendLine("</details>");
-                    sb.AppendLine();
-                }
+                WriteDosyaDetay(sb, dosya, sonuc, minScore, false);
             }
         }
 
-        // ── FOOTER ──
+        // ═══════════════════════════════════════
+        // GENEL CK METRİKLERİ ÖZETİ
+        // ═══════════════════════════════════════
+        var tumCK = sonuclar
+            .Where(s => s.Sonuc.CKMetricsPerClass != null)
+            .SelectMany(s => s.Sonuc.CKMetricsPerClass!)
+            .ToList();
+
+        if (tumCK.Count > 0)
+        {
+            sb.AppendLine("---");
+            sb.AppendLine();
+            sb.AppendLine("## CK Metrikleri — Genel Ozet (Chidamber & Kemerer)");
+            sb.AppendLine();
+
+            // Tüm sınıfların genel özet tablosu
+            int toplamSinif = tumCK.Count;
+            int wmcIhlal = tumCK.Count(c => c.WMC > 10);
+            int ditIhlal = tumCK.Count(c => c.DIT > 3);
+            int cboIhlal = tumCK.Count(c => c.CBO > 5);
+            int rfcIhlal = tumCK.Count(c => c.RFC > 20);
+            int lcomIhlal = tumCK.Count(c => c.LCOM > 3);
+            int temizSinif = tumCK.Count(c => c.WMC <= 10 && c.DIT <= 3 && c.CBO <= 5 && c.RFC <= 20 && c.LCOM <= 3);
+
+            sb.AppendLine($"> **Toplam {toplamSinif} sinif analiz edildi** — {temizSinif} sinif tum esikleri gecti ({(toplamSinif > 0 ? (double)temizSinif / toplamSinif * 100 : 0):F0}%)");
+            sb.AppendLine();
+
+            sb.AppendLine("| Metrik | Aciklama | Esik | Ihlal | Oran | Durum |");
+            sb.AppendLine("|:------:|:---------|:----:|:-----:|:----:|:-----:|");
+            sb.AppendLine($"| **WMC** | Agirlikli Metod Sayisi | <= 10 | {wmcIhlal}/{toplamSinif} | %{(toplamSinif > 0 ? (double)(toplamSinif - wmcIhlal) / toplamSinif * 100 : 0):F0} | {(wmcIhlal == 0 ? "OK" : "IHLAL")} |");
+            sb.AppendLine($"| **DIT** | Kalitim Derinligi | <= 3 | {ditIhlal}/{toplamSinif} | %{(toplamSinif > 0 ? (double)(toplamSinif - ditIhlal) / toplamSinif * 100 : 0):F0} | {(ditIhlal == 0 ? "OK" : "IHLAL")} |");
+            sb.AppendLine($"| **NOC** | Alt Sinif Sayisi | <= 5 | — | — | - |");
+            sb.AppendLine($"| **CBO** | Siniflar Arasi Bagimlilik | <= 5 | {cboIhlal}/{toplamSinif} | %{(toplamSinif > 0 ? (double)(toplamSinif - cboIhlal) / toplamSinif * 100 : 0):F0} | {(cboIhlal == 0 ? "OK" : "IHLAL")} |");
+            sb.AppendLine($"| **RFC** | Sinif Yanit Sayisi | <= 20 | {rfcIhlal}/{toplamSinif} | %{(toplamSinif > 0 ? (double)(toplamSinif - rfcIhlal) / toplamSinif * 100 : 0):F0} | {(rfcIhlal == 0 ? "OK" : "IHLAL")} |");
+            sb.AppendLine($"| **LCOM** | Uyumsuzluk (Cohesion) | <= 3 | {lcomIhlal}/{toplamSinif} | %{(toplamSinif > 0 ? (double)(toplamSinif - lcomIhlal) / toplamSinif * 100 : 0):F0} | {(lcomIhlal == 0 ? "OK" : "IHLAL")} |");
+            sb.AppendLine();
+
+            // En sorunlu sınıflar (varsa)
+            var sorunluSiniflar = tumCK
+                .Select(ck => new {
+                    ck.ClassName,
+                    Issues = (ck.WMC > 10 ? 1 : 0) + (ck.DIT > 3 ? 1 : 0) + (ck.CBO > 5 ? 1 : 0) + (ck.RFC > 20 ? 1 : 0) + (ck.LCOM > 3 ? 1 : 0),
+                    ck.WMC, ck.DIT, ck.CBO, ck.RFC, ck.LCOM
+                })
+                .Where(x => x.Issues > 0)
+                .OrderByDescending(x => x.Issues)
+                .ToList();
+
+            if (sorunluSiniflar.Count > 0)
+            {
+                sb.AppendLine("<details>");
+                sb.AppendLine("<summary><b>CK esik ihlali olan siniflar</b></summary>");
+                sb.AppendLine();
+                sb.AppendLine("| Sinif | Ihlal Sayisi | Detay |");
+                sb.AppendLine("|:------|:------------:|:------|");
+                foreach (var s in sorunluSiniflar)
+                {
+                    var detaylar = new List<string>();
+                    if (s.WMC > 10) detaylar.Add($"WMC={s.WMC}(>{10})");
+                    if (s.DIT > 3) detaylar.Add($"DIT={s.DIT}(>{3})");
+                    if (s.CBO > 5) detaylar.Add($"CBO={s.CBO}(>{5})");
+                    if (s.RFC > 20) detaylar.Add($"RFC={s.RFC}(>{20})");
+                    if (s.LCOM > 3) detaylar.Add($"LCOM={s.LCOM}(>{3})");
+                    string seviye = s.Issues >= 3 ? "Kritik" : s.Issues >= 2 ? "Orta" : "Dusuk";
+                    sb.AppendLine($"| `{s.ClassName}` | {s.Issues} ({seviye}) | {string.Join(", ", detaylar)} |");
+                }
+                sb.AppendLine();
+                sb.AppendLine("</details>");
+                sb.AppendLine();
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // İYİLEŞTİRME ÖNERİLERİ
+        // ═══════════════════════════════════════
+        var tumSorunlar = sonuclar.SelectMany(s => s.Sonuc.RuleBasedResult.Issues).ToList();
+        if (tumSorunlar.Count > 0)
+        {
+            sb.AppendLine("---");
+            sb.AppendLine();
+            sb.AppendLine("## Iyilestirme Onerileri");
+            sb.AppendLine();
+
+            var kategoriler = tumSorunlar
+                .GroupBy(i => {
+                    if (i.StartsWith("[Kapsulleme]")) return "encap";
+                    if (i.StartsWith("[Tek Sorumluluk]")) return "srp";
+                    if (i.StartsWith("[Bagimlilik Enjeksiyonu]")) return "di";
+                    if (i.StartsWith("[Arayuz]")) return "iface";
+                    if (i.StartsWith("[Kalitim]")) return "inherit";
+                    if (i.StartsWith("[Polimorfizm]")) return "poly";
+                    if (i.StartsWith("[CK-")) return "ck";
+                    return "other";
+                })
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            if (kategoriler.ContainsKey("encap") && kategoriler["encap"] > 0)
+            {
+                sb.AppendLine($"### Kapsulleme ({kategoriler["encap"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("```csharp");
+                sb.AppendLine("// Kotu: Public alan");
+                sb.AppendLine("public string name;");
+                sb.AppendLine();
+                sb.AppendLine("// Iyi: Private alan + Property");
+                sb.AppendLine("private string _name;");
+                sb.AppendLine("public string Name { get => _name; set => _name = value; }");
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("di") && kategoriler["di"] > 0)
+            {
+                sb.AppendLine($"### Bagimlilik Enjeksiyonu ({kategoriler["di"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("```csharp");
+                sb.AppendLine("// Kotu: Siki bagimlilik");
+                sb.AppendLine("public class Service {");
+                sb.AppendLine("    private repo = new Repository();");
+                sb.AppendLine("}");
+                sb.AppendLine();
+                sb.AppendLine("// Iyi: Constructor Injection");
+                sb.AppendLine("public class Service {");
+                sb.AppendLine("    private readonly IRepository _repo;");
+                sb.AppendLine("    public Service(IRepository repo) => _repo = repo;");
+                sb.AppendLine("}");
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("iface") && kategoriler["iface"] > 0)
+            {
+                sb.AppendLine($"### Interface Kullanimi ({kategoriler["iface"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("```csharp");
+                sb.AppendLine("// Kotu: Concrete sinifa bagimlilik");
+                sb.AppendLine("public class OrderService { }");
+                sb.AppendLine();
+                sb.AppendLine("// Iyi: Interface ile soyutlama");
+                sb.AppendLine("public interface IOrderService { }");
+                sb.AppendLine("public class OrderService : IOrderService { }");
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("srp") && kategoriler["srp"] > 0)
+            {
+                sb.AppendLine($"### Tek Sorumluluk Prensibi ({kategoriler["srp"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("> Bir sinif yalnizca bir isten sorumlu olmalidir. Cok fazla metod varsa sinifi bolerek");
+                sb.AppendLine("> her birinin tek bir sorumlulugu olmasini saglayin.");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("inherit") && kategoriler["inherit"] > 0)
+            {
+                sb.AppendLine($"### Kalitim ({kategoriler["inherit"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("```csharp");
+                sb.AppendLine("// Ortak davranisi base sinifta toplayin");
+                sb.AppendLine("public abstract class BaseEntity {");
+                sb.AppendLine("    public int Id { get; set; }");
+                sb.AppendLine("    public DateTime CreatedAt { get; set; }");
+                sb.AppendLine("}");
+                sb.AppendLine("public class User : BaseEntity { }");
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("poly") && kategoriler["poly"] > 0)
+            {
+                sb.AppendLine($"### Polimorfizm ({kategoriler["poly"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("```csharp");
+                sb.AppendLine("// virtual + override ile polimorfizm");
+                sb.AppendLine("public class Shape {");
+                sb.AppendLine("    public virtual double Area() => 0;");
+                sb.AppendLine("}");
+                sb.AppendLine("public class Circle : Shape {");
+                sb.AppendLine("    public override double Area() => Math.PI * R * R;");
+                sb.AppendLine("}");
+                sb.AppendLine("```");
+                sb.AppendLine();
+            }
+
+            if (kategoriler.ContainsKey("ck") && kategoriler["ck"] > 0)
+            {
+                sb.AppendLine($"### CK Metrikleri ({kategoriler["ck"]} sorun)");
+                sb.AppendLine();
+                sb.AppendLine("> - **WMC yuksek?** Sinifi daha kucuk siniflara bolun");
+                sb.AppendLine("> - **DIT yuksek?** Kalitim derinligini azaltin, composition tercih edin");
+                sb.AppendLine("> - **CBO yuksek?** Interface kullanarak gevsek baglama saglayin");
+                sb.AppendLine("> - **RFC yuksek?** Metod cagri zincirini kisaltin");
+                sb.AppendLine("> - **LCOM yuksek?** Birbiriyle iliskisiz metotlari ayri siniflara tasiyin");
+                sb.AppendLine();
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // ANALIZ METODOLOJİSİ
+        // ═══════════════════════════════════════
         sb.AppendLine("---");
         sb.AppendLine();
-        sb.AppendLine($"> **AI OOP Analyzer v2.0** -- Kural bazli + ML hibrit analiz + CK Metrikleri");
-        sb.AppendLine($"> ");
-        sb.AppendLine($"> Analiz: {DateTime.Now:yyyy-MM-dd HH:mm} | Esik: {minScore}/100 | Model: k-NN (k=3) | CK: Chidamber & Kemerer");
+        sb.AppendLine("<details>");
+        sb.AppendLine("<summary><b>Analiz Metodolojisi — Nasil calisir?</b></summary>");
+        sb.AppendLine();
+        sb.AppendLine("### Hibrit Analiz Sistemi");
+        sb.AppendLine();
+        sb.AppendLine("Bu rapor, iki bagimsiz analiz motorunun birlesik sonucudur:");
+        sb.AppendLine();
+        sb.AppendLine("| Motor | Agirlik | Aciklama |");
+        sb.AppendLine("|:------|:-------:|:---------|");
+        sb.AppendLine("| **Kural Bazli** | %60 | 7 OOP kurali + CK metrikleri kontrol edilir |");
+        sb.AppendLine("| **ML (k-NN)** | %40 | 50 ornek uzerinde egitilmis k-NN modeli |");
+        sb.AppendLine();
+        sb.AppendLine("**Formul:** `Q = 0.60 x Kural(%) + 0.40 x ML(skor)`");
+        sb.AppendLine();
+        sb.AppendLine("### Kontrol Edilen OOP Kurallari");
+        sb.AppendLine();
+        sb.AppendLine("| # | Kural | Maks Puan | Ne kontrol eder? |");
+        sb.AppendLine("|:-:|:------|:---------:|:-----------------|");
+        sb.AppendLine("| 1 | Kapsulleme | 15 | Public alanlar private/property olmali |");
+        sb.AppendLine("| 2 | Tek Sorumluluk (SRP) | 15 | Sinif basina metod sayisi |");
+        sb.AppendLine("| 3 | Bagimlilik Enjeksiyonu | 20 | `new` yerine constructor injection |");
+        sb.AppendLine("| 4 | Interface Kullanimi | 15 | Siniflarin interface implement etmesi |");
+        sb.AppendLine("| 5 | Kalitim | 15 | Base sinif kullanimi |");
+        sb.AppendLine("| 6 | Polimorfizm | 20 | virtual/override metod kullanimi |");
+        sb.AppendLine("| 7 | CK Metrikleri | 15 | WMC, DIT, NOC, CBO, RFC, LCOM |");
+        sb.AppendLine();
+        sb.AppendLine("### CK Metrikleri Esik Degerleri");
+        sb.AppendLine();
+        sb.AppendLine("| Metrik | Tam Adi | Esik | Yuksekse ne olur? |");
+        sb.AppendLine("|:------:|:--------|:----:|:------------------|");
+        sb.AppendLine("| WMC | Weighted Methods per Class | <= 10 | Sinif cok karmasik, bolunmeli |");
+        sb.AppendLine("| DIT | Depth of Inheritance Tree | <= 3 | Kalitim zinciri cok derin |");
+        sb.AppendLine("| NOC | Number of Children | <= 5 | Cok fazla alt sinif, soyutlama gerekli |");
+        sb.AppendLine("| CBO | Coupling Between Objects | <= 5 | Siki bagimlilik, interface kullanin |");
+        sb.AppendLine("| RFC | Response for a Class | <= 20 | Cok fazla metod cagrisi |");
+        sb.AppendLine("| LCOM | Lack of Cohesion of Methods | <= 3 | Metotlar iliskisiz, sinif bolunmeli |");
+        sb.AppendLine();
+        sb.AppendLine("</details>");
+        sb.AppendLine();
+
+        // ═══════════════════════════════════════
+        // FOOTER
+        // ═══════════════════════════════════════
+        sb.AppendLine("---");
+        sb.AppendLine();
+        sb.AppendLine("<div align=\"center\">");
+        sb.AppendLine();
+        sb.AppendLine($"**AI OOP Analyzer v2.0** — Kural Bazli + ML Hibrit Analiz + CK Metrikleri");
+        sb.AppendLine();
+        sb.AppendLine($"{DateTime.Now:yyyy-MM-dd HH:mm} | Esik: {minScore}/100 | Model: k-NN (k=3) | CK: Chidamber & Kemerer");
+        sb.AppendLine();
+        sb.AppendLine($"![.NET](https://img.shields.io/badge/.NET_8-512BD4?style=flat-square&logo=dotnet&logoColor=white)");
+        sb.AppendLine($"![Roslyn](https://img.shields.io/badge/Roslyn-189BDD?style=flat-square&logo=visual-studio&logoColor=white)");
+        sb.AppendLine($"![ML](https://img.shields.io/badge/k--NN_ML-FF6F61?style=flat-square&logo=tensorflow&logoColor=white)");
+        sb.AppendLine();
+        sb.AppendLine("</div>");
 
         // Dosyaya yaz
         var dir = Path.GetDirectoryName(reportPath);
         if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
             Directory.CreateDirectory(dir);
         File.WriteAllText(reportPath, sb.ToString());
+    }
+
+    // ════════════════════════════════════════════
+    // YARDIMCI: Dosya Detay Bölümü Yaz
+    // ════════════════════════════════════════════
+    static void WriteDosyaDetay(System.Text.StringBuilder sb, string dosya, HybridResult sonuc, int minScore, bool kalanMi)
+    {
+        double kuralYuzde = sonuc.RuleBasedResult.MaxScore > 0
+            ? (double)sonuc.RuleBasedResult.TotalScore / sonuc.RuleBasedResult.MaxScore * 100
+            : 0;
+
+        string dosyaSkorRenk = sonuc.CombinedScore >= 80 ? "brightgreen" : sonuc.CombinedScore >= 65 ? "yellow" : sonuc.CombinedScore >= 40 ? "orange" : "red";
+        string skorHarf = sonuc.CombinedScore >= 90 ? "A+" : sonuc.CombinedScore >= 80 ? "A" : sonuc.CombinedScore >= 70 ? "B" : sonuc.CombinedScore >= 60 ? "C" : sonuc.CombinedScore >= 40 ? "D" : "F";
+
+        if (kalanMi)
+        {
+            sb.AppendLine($"### `{dosya}` — KALDI");
+        }
+        else
+        {
+            sb.AppendLine($"<details>");
+            sb.AppendLine($"<summary><code>{dosya}</code> — {sonuc.CombinedScore:F1}/100 ({skorHarf}) GECTI</summary>");
+        }
+        sb.AppendLine();
+
+        // Badge satırı
+        sb.AppendLine($"![Skor](https://img.shields.io/badge/Skor-{sonuc.CombinedScore:F0}%2F100_({skorHarf})-{dosyaSkorRenk}?style=flat-square) ");
+        sb.AppendLine($"![Kural](https://img.shields.io/badge/Kural-%25{kuralYuzde:F0}-blue?style=flat-square) ");
+        sb.AppendLine($"![ML](https://img.shields.io/badge/ML-{sonuc.MLResult.PredictedLabel}_({sonuc.MLResult.PredictedScore:F0})-{(sonuc.MLResult.PredictedLabel == "Good" ? "green" : "red")}?style=flat-square) ");
+        sb.AppendLine($"![Guven](https://img.shields.io/badge/Guven-%25{sonuc.MLResult.Confidence * 100:F0}-blueviolet?style=flat-square)");
+        sb.AppendLine();
+
+        // Kural bazli tablo
+        sb.AppendLine("| Kural | Puan | Maks | Oran | Durum |");
+        sb.AppendLine("|:------|:----:|:----:|:----:|:-----:|");
+        foreach (var rule in sonuc.RuleBasedResult.RuleResults)
+        {
+            double oran = rule.MaxScore > 0 ? (double)rule.Score / rule.MaxScore * 100 : 0;
+            string rd = rule.Score == rule.MaxScore ? "Tam" : rule.Score >= rule.MaxScore * 0.7 ? "Kismi" : "Ihlal";
+            int miniBar = Math.Min((int)(oran / 100.0 * 8), 8);
+            string miniBarStr = new string('#', miniBar) + new string('.', 8 - miniBar);
+            sb.AppendLine($"| {rule.RuleName} | {rule.Score} | {rule.MaxScore} | `{miniBarStr}` %{oran:F0} | {rd} |");
+        }
+        sb.AppendLine();
+
+        // Sorunlar
+        if (sonuc.RuleBasedResult.Issues.Count > 0)
+        {
+            if (!kalanMi)
+            {
+                // Gecen dosyada sorunlar kucuk
+                sb.AppendLine($"**Kucuk sorunlar ({sonuc.RuleBasedResult.Issues.Count} adet):**");
+                sb.AppendLine();
+                foreach (var issue in sonuc.RuleBasedResult.Issues)
+                {
+                    sb.AppendLine($"- {issue}");
+                }
+                sb.AppendLine();
+            }
+            else
+            {
+                // Kalan dosyada detayli sorunlar
+                sb.AppendLine($"<details>");
+                sb.AppendLine($"<summary><b>Tespit edilen sorunlar ({sonuc.RuleBasedResult.Issues.Count} adet)</b></summary>");
+                sb.AppendLine();
+
+                var grouped = sonuc.RuleBasedResult.Issues
+                    .GroupBy(i => {
+                        if (i.StartsWith("[Kapsulleme]")) return "Kapsulleme";
+                        if (i.StartsWith("[Tek Sorumluluk]")) return "Tek Sorumluluk (SRP)";
+                        if (i.StartsWith("[Bagimlilik Enjeksiyonu]")) return "Bagimlilik Enjeksiyonu (DI)";
+                        if (i.StartsWith("[Arayuz]")) return "Arayuz (Interface)";
+                        if (i.StartsWith("[Kalitim]")) return "Kalitim (Inheritance)";
+                        if (i.StartsWith("[Polimorfizm]")) return "Polimorfizm";
+                        if (i.StartsWith("[CK-")) return "CK Metrikleri";
+                        return "Diger";
+                    });
+
+                foreach (var group in grouped)
+                {
+                    sb.AppendLine($"**{group.Key}:**");
+                    foreach (var issue in group)
+                    {
+                        sb.AppendLine($"- {issue}");
+                    }
+                    sb.AppendLine();
+                }
+
+                sb.AppendLine("</details>");
+                sb.AppendLine();
+            }
+        }
+
+        // Teknik detaylar
+        sb.AppendLine("<details>");
+        sb.AppendLine("<summary><b>Teknik Detaylar</b></summary>");
+        sb.AppendLine();
+        sb.AppendLine("| Ozellik | Deger | | Ozellik | Deger |");
+        sb.AppendLine("|:--------|:-----:|-|:--------|:-----:|");
+        sb.AppendLine($"| Sinif sayisi | {sonuc.Features.ClassCount} | | Kapsulleme | %{sonuc.Features.EncapsulationRatio * 100:F0} |");
+        sb.AppendLine($"| Toplam metod | {sonuc.Features.TotalMethodCount} | | Interface orani | %{sonuc.Features.InterfaceRatio * 100:F0} |");
+        sb.AppendLine($"| Public alan | {sonuc.Features.PublicFieldCount} | | virtual metod | {sonuc.Features.VirtualMethodCount} |");
+        sb.AppendLine($"| Private alan | {sonuc.Features.PrivateFieldCount} | | override metod | {sonuc.Features.OverrideMethodCount} |");
+        sb.AppendLine($"| new kullanimi | {sonuc.Features.ObjectCreationCount} | | ML guven | %{sonuc.MLResult.Confidence * 100:F0} |");
+        sb.AppendLine($"| | | | Yakin ornekler | {string.Join(", ", sonuc.MLResult.NearestNeighbors)} |");
+        sb.AppendLine();
+        sb.AppendLine("</details>");
+
+        // CK Metrikleri tablosu
+        if (sonuc.CKMetricsPerClass != null && sonuc.CKMetricsPerClass.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("<details>");
+            sb.AppendLine("<summary><b>CK Metrikleri — Sinif Bazli</b></summary>");
+            sb.AppendLine();
+
+            sb.AppendLine("| Sinif | WMC | DIT | NOC | CBO | RFC | LCOM | Not |");
+            sb.AppendLine("|:------|:---:|:---:|:---:|:---:|:---:|:----:|:---:|");
+
+            foreach (var ck in sonuc.CKMetricsPerClass)
+            {
+                int ckIssues = (ck.WMC > 10 ? 1 : 0) + (ck.DIT > 3 ? 1 : 0) + (ck.CBO > 5 ? 1 : 0) +
+                               (ck.RFC > 20 ? 1 : 0) + (ck.LCOM > 3 ? 1 : 0);
+                string grade = ckIssues == 0 ? "A+" : ckIssues == 1 ? "B" : ckIssues == 2 ? "C" : ckIssues <= 3 ? "D" : "F";
+
+                string wmcFmt = ck.WMC > 10 ? $"**{ck.WMC}**" : $"{ck.WMC}";
+                string ditFmt = ck.DIT > 3 ? $"**{ck.DIT}**" : $"{ck.DIT}";
+                string nocFmt = $"{ck.NOC}";
+                string cboFmt = ck.CBO > 5 ? $"**{ck.CBO}**" : $"{ck.CBO}";
+                string rfcFmt = ck.RFC > 20 ? $"**{ck.RFC}**" : $"{ck.RFC}";
+                string lcomFmt = ck.LCOM > 3 ? $"**{ck.LCOM}**" : $"{ck.LCOM}";
+
+                sb.AppendLine($"| `{ck.ClassName}` | {wmcFmt} | {ditFmt} | {nocFmt} | {cboFmt} | {rfcFmt} | {lcomFmt} | {grade} |");
+            }
+
+            var ckAvg = sonuc.CKMetricsAverage;
+            if (ckAvg != null)
+            {
+                sb.AppendLine($"| **Ortalama** | **{ckAvg.WMC}** | **{ckAvg.DIT}** | **{ckAvg.NOC}** | **{ckAvg.CBO}** | **{ckAvg.RFC}** | **{ckAvg.LCOM}** | — |");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine("</details>");
+        }
+
+        sb.AppendLine();
+
+        if (!kalanMi)
+        {
+            sb.AppendLine("</details>");
+            sb.AppendLine();
+        }
     }
 
     // ════════════════════════════════════════════
