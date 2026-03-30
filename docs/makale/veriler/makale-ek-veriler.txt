@@ -1,0 +1,381 @@
+========================================================================================================================
+  AI OOP ANALYZER - EK DENEYSEL VERILER
+========================================================================================================================
+
+========================================================================================================================
+  EK-1: PER-SAMPLE LOO-CV DETAYI (k=3)
+========================================================================================================================
+
+  Her ornegin LOO-CV'de tahmin sonucu, skoru ve en yakin 3 komsulari
+
+   No ID           Gercek Tahmin  Hedef Skor  Tahmin Skor    Hata   Guven Komsu-1      Komsu-2      Komsu-3     
+  --- ------------ ------ ------ ----------- ------------ ------- ------- ------------ ------------ ------------
+    1 good-01        Good   Good        95.0        93.46    1.54  100.0% good-10      good-05      good-02     
+    2 good-02        Good   Good        95.0        94.33    0.67  100.0% good-12      good-15      good-18     
+    3 good-03        Good   Good        90.0        90.00    0.00  100.0% good-16      good-08      good-ck-02  
+    4 good-04        Good   Good        95.0        93.00    2.00  100.0% good-07      good-01      good-10     
+    5 good-05        Good   Good        92.0        94.31    2.31  100.0% good-10      good-01      good-ck-01  
+    6 good-06        Good   Good        90.0        92.00    2.00  100.0% good-13      good-ck-04   good-ck-01  
+    7 good-07        Good   Good        93.0        95.00    2.00  100.0% good-04      good-01      good-10     
+    8 good-08        Good   Good        90.0        91.04    1.04  100.0% good-ck-02   good-03      good-16     
+    9 good-09        Good   Good        92.0        94.00    2.00  100.0% good-ck-05   good-ck-03   good-14     
+   10 good-10        Good   Good        94.0        92.95    1.05  100.0% good-05      good-01      good-ck-01  
+   11 good-11        Good   Good        88.0        94.31    6.31  100.0% good-04      good-07      good-01     
+   12 good-12        Good   Good        93.0        95.00    2.00  100.0% good-02      good-15      good-18     
+   13 good-13        Good   Good        92.0        90.00    2.00  100.0% good-06      good-ck-04   good-ck-01  
+   14 good-14        Good   Good        90.0        93.00    3.00  100.0% good-ck-03   good-09      good-ck-05  
+   15 good-15        Good   Good        95.0        94.33    0.67  100.0% good-02      good-12      good-18     
+   16 good-16        Good   Good        90.0        90.00    0.00  100.0% good-03      good-08      good-ck-02  
+   17 good-17        Good   Good        94.0        94.46    0.46  100.0% good-19      good-02      good-12     
+   18 good-18        Good   Good        95.0        94.33    0.67  100.0% good-02      good-12      good-15     
+   19 good-19        Good   Good        95.0        94.00    1.00  100.0% good-17      good-02      good-12     
+   20 good-20        Good   Good        88.0        90.60    2.60  100.0% good-03      good-16      good-ck-02  
+   21 bad-01          Bad    Bad        25.0        20.01    4.99  100.0% bad-18       bad-07       bad-17      
+   22 bad-02          Bad    Bad        20.0        16.84    3.16  100.0% bad-06       bad-10       bad-15      
+   23 bad-03          Bad    Bad        20.0        19.76    0.24  100.0% bad-13       bad-12       bad-07      
+   24 bad-04          Bad    Bad        15.0        15.00    0.00  100.0% bad-11       bad-08       bad-09      
+   25 bad-05          Bad    Bad        15.0        13.55    1.45  100.0% bad-04       bad-11       bad-08      
+   26 bad-06          Bad    Bad        20.0        16.50    3.50  100.0% bad-15       bad-02       bad-10      
+   27 bad-07          Bad    Bad        25.0        21.73    3.27  100.0% bad-01       bad-18       bad-17      
+   28 bad-08          Bad    Bad        10.0        15.00    5.00  100.0% bad-04       bad-11       bad-05      
+   29 bad-09          Bad    Bad        20.0        15.00    5.00  100.0% bad-04       bad-11       bad-05      
+   30 bad-10          Bad    Bad        15.0        18.43    3.43  100.0% bad-02       bad-06       bad-15      
+   31 bad-11          Bad    Bad        15.0        15.00    0.00  100.0% bad-04       bad-08       bad-09      
+   32 bad-12          Bad    Bad        15.0        17.18    2.18  100.0% bad-13       bad-19       bad-03      
+   33 bad-13          Bad    Bad        20.0        16.22    3.78  100.0% bad-03       bad-12       bad-19      
+   34 bad-14          Bad    Bad        10.0        15.00    5.00  100.0% bad-05       bad-04       bad-11      
+   35 bad-15          Bad    Bad        15.0        18.77    3.77  100.0% bad-06       bad-02       bad-10      
+   36 bad-16          Bad    Bad        15.0        16.77    1.77  100.0% bad-09       bad-04       bad-11      
+   37 bad-17          Bad    Bad        15.0        23.33    8.33  100.0% bad-01       bad-18       bad-07      
+   38 bad-18          Bad    Bad        20.0        25.00    5.00  100.0% bad-01       bad-07       bad-17      
+   39 bad-19          Bad    Bad        10.0        17.74    7.74  100.0% bad-12       bad-13       bad-03      
+   40 bad-20          Bad    Bad        10.0        15.00    5.00  100.0% bad-04       bad-11       bad-05      
+   41 good-ck-01     Good   Good        95.0        91.00    4.00  100.0% good-06      good-13      good-ck-04  
+   42 good-ck-02     Good   Good        92.0        90.00    2.00  100.0% good-08      good-03      good-16     
+   43 good-ck-03     Good   Good        93.0        92.58    0.42  100.0% good-09      good-ck-05   good-14     
+   44 good-ck-04     Good   Good        91.0        91.63    0.63  100.0% good-06      good-13      good-ck-01  
+   45 good-ck-05     Good   Good        94.0        92.00    2.00  100.0% good-09      good-ck-03   good-14     
+   46 bad-ck-01       Bad    Bad         5.0        13.29    8.29  100.0% bad-20       bad-06       bad-08      
+   47 bad-ck-02       Bad    Bad        15.0        15.07    0.07  100.0% bad-12       bad-13       bad-19      
+   48 bad-ck-03       Bad    Bad        10.0        17.86    7.86  100.0% bad-17       bad-10       bad-01      
+   49 bad-ck-04       Bad    Bad        10.0        15.10    5.10  100.0% bad-10       bad-02       bad-20      
+   50 bad-ck-05       Bad    Bad         5.0        11.93    6.93  100.0% bad-05       bad-08       bad-14      
+
+  Toplam: 39 ornek < 5 puan hata
+  Ort. tahmin hatasi: 2.86 puan
+  Maks. tahmin hatasi: 8.33 puan
+  Min. tahmin hatasi: 0.00 puan
+  Tahmin hatasi std sapma: 2.34
+
+
+========================================================================================================================
+  EK-2: OZELLIK-KALITE SKOR KORELASYONU (Pearson)
+========================================================================================================================
+
+  Her ozellikteki degerin hedef kalite skoru ile korelasyonu
+  r > 0.5 : Guclu pozitif iliskili (iyi koda isaret eder)
+  r < -0.5: Guclu negatif iliskili (kotu koda isaret eder)
+
+  Ozellik                              r (Pearson)    |r|        Guc Yorum               
+  ----------------------------------- ------------ ------ ---------- --------------------
+  EncapsulationRatio                       +0.9945 0.9945 Cok guclu  Iyi kod+ ###################
+  InterfaceRatio                           +0.8248 0.8248 Cok guclu  Iyi kod+ ################
+  PrivateFieldCount                        +0.7952 0.7952 Cok guclu  Iyi kod+ ###############
+  PublicFieldCount                         -0.7898 0.7898 Cok guclu  Kotu kod+ ###############
+  AvgCBO                                   +0.7442 0.7442 Cok guclu  Iyi kod+ ##############
+  InterfaceImplementationCount             +0.7355 0.7355 Cok guclu  Iyi kod+ ##############
+  ClassesWithInterface                     +0.7355 0.7355 Cok guclu  Iyi kod+ ##############
+  ClassesWithoutInterface                  -0.5475 0.5475 Guclu      Kotu kod+ ##########
+  ClassesExceedingMethodThreshold          -0.5176 0.5176 Guclu      Kotu kod+ ##########
+  AvgLCOM                                  -0.5125 0.5125 Guclu      Kotu kod+ ##########
+  TotalMethodCount                         -0.4867 0.4867 Orta       Kotu kod+ #########
+  HasDirectInstantiation                   -0.4530 0.4530 Orta       Kotu kod+ #########
+  AvgMethodsPerClass                       -0.4434 0.4434 Orta       Kotu kod+ ########
+  AvgWMC                                   -0.4073 0.4073 Orta       Kotu kod+ ########
+  AvgRFC                                   -0.3927 0.3927 Orta       Kotu kod+ #######
+  TotalFieldCount                          -0.3847 0.3847 Orta       Kotu kod+ #######
+  ObjectCreationCount                      -0.3746 0.3746 Orta       Kotu kod+ #######
+  ClassesWithPolymorphism                  +0.3084 0.3084 Orta       Iyi kod+ ######
+  OverrideMethodCount                      +0.3035 0.3035 Orta       Iyi kod+ ######
+  VirtualMethodCount                       +0.2729 0.2729 Zayif      Iyi kod+ #####
+  AvgNOC                                   +0.2000 0.2000 Zayif      Iyi kod+ ###
+  InheritanceCount                         +0.1159 0.1159 Zayif      Iyi kod+ ##
+  ClassesWithInheritance                   +0.1159 0.1159 Zayif      Iyi kod+ ##
+  ClassCount                               -0.1016 0.1016 Zayif      Kotu kod+ ##
+  MaxDIT                                   +0.0219 0.0219 Cok zayif  Iyi kod+ 
+  TotalPropertyCount                       +0.0000 0.0000 Cok zayif  Kotu kod+ 
+
+
+========================================================================================================================
+  EK-3: OZELLIKLER ARASI KORELASYON (en yuksek 20 cift)
+========================================================================================================================
+
+  Ozellikler arasindaki Pearson korelasyonu (coklu dogrusal bagimliligi gosterir)
+
+  Ozellik-1                      Ozellik-2                             r
+  ------------------------------ ------------------------------ --------
+  InheritanceCount               ClassesWithInheritance          +1.0000
+  InterfaceImplementationCount   ClassesWithInterface            +1.0000
+  InheritanceCount               AvgNOC                          +0.9581
+  ClassesWithInheritance         AvgNOC                          +0.9581
+  InheritanceCount               MaxDIT                          +0.9458
+  ClassesWithInheritance         MaxDIT                          +0.9458
+  VirtualMethodCount             OverrideMethodCount             +0.9456
+  AvgMethodsPerClass             AvgRFC                          +0.9432
+  OverrideMethodCount            ClassesWithPolymorphism         +0.9431
+  AvgMethodsPerClass             AvgLCOM                         +0.9362
+  AvgMethodsPerClass             AvgWMC                          +0.8905
+  InterfaceImplementationCount   InterfaceRatio                  +0.8890
+  ClassesWithInterface           InterfaceRatio                  +0.8890
+  ClassesWithPolymorphism        AvgNOC                          +0.8573
+  AvgRFC                         AvgLCOM                         +0.8488
+  MaxDIT                         AvgNOC                          +0.8359
+  AvgWMC                         AvgRFC                          +0.8327
+  InterfaceRatio                 AvgCBO                          +0.8223
+  OverrideMethodCount            AvgNOC                          +0.8183
+  EncapsulationRatio             InterfaceRatio                  +0.8165
+  VirtualMethodCount             ClassesWithPolymorphism         +0.8140
+  TotalFieldCount                PublicFieldCount                +0.7937
+  AvgWMC                         AvgLCOM                         +0.7934
+  PrivateFieldCount              EncapsulationRatio              +0.7918
+  TotalMethodCount               ClassesExceedingMethodThreshold  +0.7917
+
+
+========================================================================================================================
+  EK-4: GOOD vs BAD FEATURE DISTRIBUTION (Histogram)
+========================================================================================================================
+
+  Her ozellik icin Good ve Bad orneklerin dagilimi
+
+  ClassCount:
+    Good: ort=1.960, min=1.0, max=3.0, std=0.790
+    Bad : ort=2.160, min=1.0, max=7.0, std=1.434
+    t-test: t=0.611, anlamlilik=ns
+
+  TotalMethodCount:
+    Good: ort=2.520, min=1.0, max=7.0, std=1.122
+    Bad : ort=4.320, min=0.0, max=10.0, std=2.462
+    t-test: t=3.326, anlamlilik=**
+
+  TotalFieldCount:
+    Good: ort=1.360, min=0.0, max=3.0, std=0.757
+    Bad : ort=2.160, min=1.0, max=5.0, std=1.313
+    t-test: t=2.639, anlamlilik=**
+
+  TotalPropertyCount:
+    Good: ort=0.000, min=0.0, max=0.0, std=0.000
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=0.000, anlamlilik=ns
+
+  PublicFieldCount:
+    Good: ort=0.000, min=0.0, max=0.0, std=0.000
+    Bad : ort=2.160, min=1.0, max=5.0, std=1.313
+    t-test: t=8.227, anlamlilik=***
+
+  PrivateFieldCount:
+    Good: ort=1.360, min=0.0, max=3.0, std=0.757
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=8.981, anlamlilik=***
+
+  EncapsulationRatio:
+    Good: ort=1.000, min=1.0, max=1.0, std=0.000
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=1000.000, anlamlilik=***
+
+  AvgMethodsPerClass:
+    Good: ort=1.413, min=1.0, max=3.5, std=0.624
+    Bad : ort=2.480, min=0.0, max=6.0, std=1.641
+    t-test: t=3.038, anlamlilik=**
+
+  ClassesExceedingMethodThreshold:
+    Good: ort=0.080, min=-0.0, max=2.0, std=0.400
+    Bad : ort=0.720, min=-0.0, max=3.0, std=0.737
+    t-test: t=3.816, anlamlilik=***
+
+  ObjectCreationCount:
+    Good: ort=0.080, min=0.0, max=2.0, std=0.400
+    Bad : ort=0.840, min=0.0, max=6.0, std=1.375
+    t-test: t=2.654, anlamlilik=**
+
+  HasDirectInstantiation:
+    Good: ort=0.040, min=0.0, max=1.0, std=0.200
+    Bad : ort=0.440, min=0.0, max=1.0, std=0.507
+    t-test: t=3.672, anlamlilik=***
+
+  InterfaceImplementationCount:
+    Good: ort=1.400, min=0.0, max=3.0, std=0.957
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=7.311, anlamlilik=***
+
+  ClassesWithInterface:
+    Good: ort=1.400, min=0.0, max=3.0, std=0.957
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=7.311, anlamlilik=***
+
+  ClassesWithoutInterface:
+    Good: ort=0.560, min=0.0, max=3.0, std=1.158
+    Bad : ort=2.160, min=1.0, max=7.0, std=1.434
+    t-test: t=4.341, anlamlilik=***
+
+  InterfaceRatio:
+    Good: ort=0.800, min=0.0, max=1.0, std=0.408
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=9.798, anlamlilik=***
+
+  InheritanceCount:
+    Good: ort=0.360, min=0.0, max=2.0, std=0.757
+    Bad : ort=0.160, min=0.0, max=4.0, std=0.800
+    t-test: t=0.908, anlamlilik=ns
+
+  ClassesWithInheritance:
+    Good: ort=0.360, min=0.0, max=2.0, std=0.757
+    Bad : ort=0.160, min=0.0, max=4.0, std=0.800
+    t-test: t=0.908, anlamlilik=ns
+
+  VirtualMethodCount:
+    Good: ort=0.320, min=0.0, max=3.0, std=0.748
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=2.138, anlamlilik=*
+
+  OverrideMethodCount:
+    Good: ort=0.440, min=0.0, max=3.0, std=0.917
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=2.400, anlamlilik=*
+
+  ClassesWithPolymorphism:
+    Good: ort=0.560, min=0.0, max=3.0, std=1.158
+    Bad : ort=0.000, min=0.0, max=0.0, std=0.000
+    t-test: t=2.419, anlamlilik=*
+
+  AvgWMC:
+    Good: ort=1.506, min=1.0, max=3.5, std=0.745
+    Bad : ort=2.680, min=0.0, max=8.0, std=1.977
+    t-test: t=2.777, anlamlilik=**
+
+  MaxDIT:
+    Good: ort=0.200, min=0.0, max=1.0, std=0.408
+    Bad : ort=0.160, min=0.0, max=4.0, std=0.800
+    t-test: t=0.223, anlamlilik=ns
+
+  AvgNOC:
+    Good: ort=0.127, min=0.0, max=0.7, std=0.261
+    Bad : ort=0.032, min=0.0, max=0.8, std=0.160
+    t-test: t=1.553, anlamlilik=*
+
+  AvgCBO:
+    Good: ort=1.334, min=0.5, max=2.0, std=0.515
+    Bad : ort=0.357, min=0.0, max=1.0, std=0.374
+    t-test: t=7.672, anlamlilik=***
+
+  AvgRFC:
+    Good: ort=1.800, min=1.0, max=3.5, std=0.800
+    Bad : ort=2.820, min=0.0, max=7.0, std=1.797
+    t-test: t=2.595, anlamlilik=**
+
+  AvgLCOM:
+    Good: ort=0.353, min=0.0, max=4.5, std=0.941
+    Bad : ort=3.383, min=0.0, max=15.0, std=4.075
+    t-test: t=3.623, anlamlilik=***
+
+
+========================================================================================================================
+  EK-5: AGIRLIKSIZ vs AGIRLIKLI k-NN KARSILASTIRMASI
+========================================================================================================================
+
+  Agirliksiz: tum ozellikler esit agirlik (1.0)
+  Agirlikli : feature importance agirlikli
+
+    k   Agirlikli Acc  Agirlikli Hata    Agirlksz Acc   Agirlksz Hata     Fark
+  --- --------------- --------------- --------------- --------------- --------
+    1          100.0%            2.82           98.0%            4.30    +2.0%
+    3          100.0%            2.86           98.0%            4.26    +2.0%
+    5          100.0%            3.33           98.0%            4.29    +2.0%
+    7          100.0%            3.31           98.0%            4.23    +2.0%
+    9           98.0%            3.44           98.0%            4.14    +0.0%
+
+
+========================================================================================================================
+  EK-6: SINIF-ICI ve SINIFLAR-ARASI MESAFE ANALIZI
+========================================================================================================================
+
+  Oklid mesafesi istatistikleri (agirlikli):
+  Cift Turu                   Ort Mesafe      Min      Max      Std  Cift Sayisi
+  ------------------------- ------------ -------- -------- -------- ------------
+  Good-Good                       0.9225   0.0000   2.2072   0.5786          300
+  Bad-Bad                         1.0554   0.0000   2.2216   0.4325          300
+  Good-Bad                        1.6539   1.1377   2.4521   0.2665          625
+
+  Siniflar-arasi / Sinif-ici mesafe orani: 1.79
+  (1'den buyuk = siniflar iyi ayrilmis)
+
+
+========================================================================================================================
+  EK-7: TAHMIN SKOR DAGILIMI (LOO-CV, k=3)
+========================================================================================================================
+
+  Good orneklerin tahmin skorlari:
+    Ortalama: 92.69
+    Min: 90.00
+    Max: 95.00
+    Std: 1.70
+    Degerler: 90.0, 90.0, 90.0, 90.0, 90.6, 91.0, 91.0, 91.6, 92.0, 92.0, 92.6, 93.0, 93.0, 93.0, 93.5, 94.0, 94.0, 94.3, 94.3, 94.3, 94.3, 94.3, 94.5, 95.0, 95.0
+
+  Bad orneklerin tahmin skorlari:
+    Ortalama: 17.00
+    Min: 11.93
+    Max: 25.00
+    Std: 3.05
+    Degerler: 11.9, 13.3, 13.5, 15.0, 15.0, 15.0, 15.0, 15.0, 15.0, 15.1, 15.1, 16.2, 16.5, 16.8, 16.8, 17.2, 17.7, 17.9, 18.4, 18.8, 19.8, 20.0, 21.7, 23.3, 25.0
+
+  Siniflar arasi skor farki: 75.69 puan
+  En dusuk Good tahmin: 90.00
+  En yuksek Bad tahmin: 25.00
+  Ayrim marji: 65.00 puan
+
+
+========================================================================================================================
+  EK-8: FEATURE IMPORTANCE YONTEM KARSILASTIRMASI
+========================================================================================================================
+
+  Yontem-1: Feature Weight (Good-Bad ortalama farki)
+  Yontem-2: Pearson Korelasyonu (feature-score)
+  Yontem-3: t-test istatistigi (Good vs Bad)
+
+  Ozellik                              Agirlik Sira  Korelasyon Sira  t-test Sira
+  ----------------------------------- ------------- ---------------- ------------
+  ClassCount                                     24               24           24
+  TotalMethodCount                               12               11           12
+  TotalFieldCount                                16               16           16
+  TotalPropertyCount                             26               26           26
+  PublicFieldCount                                4                4            4
+  PrivateFieldCount                               3                3            3
+  EncapsulationRatio                              1                1            1
+  AvgMethodsPerClass                             13               13           13
+  ClassesExceedingMethodThreshold                 9                9            9
+  ObjectCreationCount                            15               17           15
+  HasDirectInstantiation                         10               12           10
+  InterfaceImplementationCount                    6                6            6
+  ClassesWithInterface                            7                7            7
+  ClassesWithoutInterface                         8                8            8
+  InterfaceRatio                                  2                2            2
+  InheritanceCount                               22               22           22
+  ClassesWithInheritance                         23               23           23
+  VirtualMethodCount                             20               20           20
+  OverrideMethodCount                            19               19           19
+  ClassesWithPolymorphism                        18               18           18
+  AvgWMC                                         14               14           14
+  MaxDIT                                         25               25           25
+  AvgNOC                                         21               21           21
+  AvgCBO                                          5                5            5
+  AvgRFC                                         17               15           17
+  AvgLCOM                                        11               10           11
+
+  Siralama uyumu (Spearman rank korelasyonu):
+    Weight vs Korelasyon: rho = 0.9952
+    Weight vs t-test   : rho = 1.0000
+    Korelasyon vs t-test: rho = 0.9952
+
+
+========================================================================================================================
+  EK VERILER TAMAMLANDI!
+========================================================================================================================
